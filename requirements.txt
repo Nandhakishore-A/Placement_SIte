@@ -1,0 +1,14 @@
+Flask==3.1.2
+flask-cors==6.0.5
+Flask-SQLAlchemy==3.1.1
+SQLAlchemy==2.0.51
+google-genai==2.20.0
+reportlab==5.0.1
+openpyxl==3.1.5
+python-docx==1.2.0
+pypdf==6.16.2
+python-dotenv==1.2.2
+cloudinary==1.46.2
+requests==2.32.5
+Werkzeug==3.1.4
+gunicorn==23.0.0

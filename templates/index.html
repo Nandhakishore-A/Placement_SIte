@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Placement Management System — Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .student-row:hover .highlight-target,
+        .student-row:focus-within .highlight-target,
+        .student-row.active-highlight .highlight-target {
+            color: #2563eb;
+            font-weight: 700;
+            background-color: #eff6ff;
+            transform: scale(1.02);
+            transition: all 0.2s ease;
+        }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 flex h-screen overflow-hidden">
+
+    <!-- SIDEBAR NAVIGATION -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col flex-shrink-0 border-r border-slate-800 select-none z-20">
+        <!-- Logo & Header -->
+        <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                    <i class="fa-solid fa-graduation-cap text-lg text-white"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-base tracking-tight leading-tight">PlacementOS</h1>
+                    <span id="roleBadge" class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                        Admin
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto custom-scrollbar" id="navLinks">
+            <!-- Navigation Items populated dynamically based on role -->
+            <button onclick="switchTab('dashboard')" id="nav-dashboard"
+                class="nav-item w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-chart-pie w-5 text-center text-blue-400"></i>
+                <span>Analytics Dashboard</span>
+            </button>
+
+            <button onclick="switchTab('students')" id="nav-students"
+                class="nav-item w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-user-graduate w-5 text-center text-emerald-400"></i>
+                <span>Student Directory</span>
+                <span class="ml-auto text-xs bg-slate-800 px-2 py-0.5 rounded-full text-slate-400">3000</span>
+            </button>
+
+            <!-- Company Management (Non-manager) -->
+            <button onclick="switchTab('companies')" id="nav-companies"
+                class="nav-item w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-building-columns w-5 text-center text-indigo-400"></i>
+                <span>Company CRM</span>
+                <span id="companyNavBadge" class="hidden ml-auto text-[10px] bg-rose-500 text-white font-bold px-1.5 py-0.5 rounded-full animate-pulse">0</span>
+            </button>
+
+            <!-- Placement Drives (Non-manager) -->
+            <button onclick="switchTab('placements')" id="nav-placements"
+                class="nav-item w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-briefcase w-5 text-center text-amber-400"></i>
+                <span>Drives & Attendance</span>
+            </button>
+
+            <!-- Gemini ATS Engine (Non-manager) -->
+            <button onclick="switchTab('ats')" id="nav-ats"
+                class="nav-item w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-brain w-5 text-center text-purple-400"></i>
+                <span>Gemini ATS AI</span>
+                <span class="ml-auto text-[10px] bg-purple-500/20 text-purple-300 font-bold px-1.5 py-0.5 rounded border border-purple-500/30">AI</span>
+            </button>
+
+            <!-- Reports Hub -->
+            <button onclick="switchTab('reports')" id="nav-reports"
+                class="nav-item w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-file-invoice w-5 text-center text-rose-400"></i>
+                <span>Reports & Exports</span>
+            </button>
+
+            <!-- Admin Activity Logs (Admin only) -->
+            <button onclick="switchTab('logs')" id="nav-logs"
+                class="nav-item w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">
+                <i class="fa-solid fa-clock-rotate-left w-5 text-center text-cyan-400"></i>
+                <span>Activity Audit Logs</span>
+            </button>
+        </nav>
+
+        <!-- Current User Info & Quick Switch -->
+        <div class="p-3 border-t border-slate-800 bg-slate-950/40">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-full bg-blue-600/30 border border-blue-500/40 flex items-center justify-center font-bold text-blue-300 text-xs">
+                    <span id="userAvatarText">AD</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div id="userFullName" class="text-xs font-bold text-white truncate">Loading...</div>
+                    <div id="userMemberId" class="text-[11px] text-slate-400 truncate">ADMIN</div>
+                </div>
+                <button onclick="logout()" title="Sign Out" class="text-slate-400 hover:text-red-400 p-1.5 rounded-lg hover:bg-slate-800 transition">
+                    <i class="fa-solid fa-power-off text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-1 flex flex-col min-w-0 bg-slate-50 overflow-hidden">
+
+        <!-- TOP BAR -->
+        <header class="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between flex-shrink-0 z-10 shadow-sm">
+            <div class="flex items-center space-x-4">
+                <h2 id="pageTitle" class="text-lg font-bold text-slate-900">Analytics Dashboard</h2>
+                <span id="pageSubtitle" class="text-xs text-slate-500 hidden sm:inline">Real-time placement statistics & student database</span>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <div class="relative">
+                    <input type="text" id="globalSearchInput" onkeyup="handleGlobalSearch(event)"
+                        placeholder="Search student / roll no..."
+                        class="w-48 sm:w-64 bg-slate-100 border border-slate-200 rounded-xl pl-9 pr-4 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white transition">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                </div>
+
+                <button onclick="refreshCurrentTab()" title="Refresh Data"
+                    class="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition shadow-sm">
+                    <i class="fa-solid fa-rotate text-xs"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- TAB CONTENT CONTAINER -->
+        <div class="flex-1 p-6 overflow-y-auto custom-scrollbar" id="tabContent">
+            
+            <!-- ========================================== -->
+            <!-- 1. ANALYTICS DASHBOARD TAB -->
+            <!-- ========================================== -->
+            <section id="tab-dashboard" class="space-y-6">
+                <!-- Personalized Welcome Banner -->
+                <div class="bg-gradient-to-r from-blue-700 via-indigo-700 to-slate-900 rounded-3xl p-6 text-white shadow-md relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div class="relative z-10">
+                        <div class="inline-flex items-center space-x-2 bg-white/10 backdrop-blur px-3 py-1 rounded-full text-xs font-semibold text-blue-200 mb-2 border border-white/10">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <span id="welcomeRoleTag">PORTAL ACCESS ACTIVE</span>
+                        </div>
+                        <h1 id="welcomeUserHeading" class="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                            Welcome Admin (Sivasubramaniyan Sir)
+                        </h1>
+                        <p id="welcomeUserSubheading" class="text-xs sm:text-sm text-blue-100/80 mt-1 max-w-xl">
+                            Overall Placement Analytics & Campus Drive Management Suite.
+                        </p>
+                    </div>
+                    <div class="relative z-10 flex flex-wrap items-center gap-2" id="dashboardQuickActions">
+                        <!-- Populated by JS based on user role -->
+                    </div>
+                </div>
+
+                <!-- ========================================== -->
+                <!-- ADMIN EMAIL VERIFICATION & FORWARDED PROPOSALS WIDGET -->
+                <!-- ========================================== -->
+                <div id="adminDashboardEmailVerificationContainer" class="hidden bg-slate-900 text-white p-6 rounded-2xl border border-slate-800 shadow-md space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-9 h-9 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center text-sm border border-blue-500/30">
+                                <i class="fa-solid fa-envelope-circle-check"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-200 flex items-center space-x-2">
+                                    <span>Email Verification — Forwarded Company Proposals</span>
+                                    <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+                                </h3>
+                                <p class="text-xs text-slate-400">
+                                    Company proposals submitted by team leads awaiting administrative verification & acceptance.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-2">
+                            <span id="adminDashboardPendingEmailCountBadge" class="text-xs font-bold bg-blue-600 text-white px-3 py-1 rounded-lg">
+                                0 Awaiting Verification
+                            </span>
+                            <button onclick="viewDispatchedEmail(null)" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg border border-slate-700 transition flex items-center space-x-1 cursor-pointer">
+                                <i class="fa-solid fa-clock-rotate-left text-blue-400"></i>
+                                <span>Email Logs</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- List of Forwarded Proposals Awaiting Email Verification -->
+                    <div id="adminDashboardPendingEmailList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Top Summary Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Total Students -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                        <div>
+                            <span class="text-xs font-semibold text-slate-500">Total Registered Candidates</span>
+                            <h3 id="statTotalStudents" class="text-2xl font-extrabold text-slate-900 mt-1">3,000</h3>
+                            <span class="text-[11px] text-emerald-600 font-medium flex items-center mt-1">
+                                <i class="fa-solid fa-users mr-1"></i> Across 8 Engineering Depts
+                            </span>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-user-graduate"></i>
+                        </div>
+                    </div>
+
+                    <!-- Placed Students -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                        <div>
+                            <span class="text-xs font-semibold text-slate-500">Placed Candidates</span>
+                            <h3 id="statPlacedStudents" class="text-2xl font-extrabold text-emerald-600 mt-1">77</h3>
+                            <span id="statPlacementRate" class="text-[11px] text-emerald-700 font-semibold flex items-center mt-1">
+                                <i class="fa-solid fa-arrow-trend-up mr-1"></i> 2.6% Current Rate
+                            </span>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-award"></i>
+                        </div>
+                    </div>
+
+                    <!-- Yet To Be Placed -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                        <div>
+                            <span class="text-xs font-semibold text-slate-500">Yet To Be Placed</span>
+                            <h3 id="statUnplacedStudents" class="text-2xl font-extrabold text-amber-600 mt-1">2,923</h3>
+                            <span class="text-[11px] text-slate-500 font-medium flex items-center mt-1">
+                                <i class="fa-solid fa-circle-notch mr-1"></i> In Active Preparation
+                            </span>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-hourglass-half"></i>
+                        </div>
+                    </div>
+
+                    <!-- CTC Metrics -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                        <div>
+                            <span class="text-xs font-semibold text-slate-500">Highest / Average CTC</span>
+                            <h3 id="statHighestCTC" class="text-2xl font-extrabold text-indigo-600 mt-1">6.5 LPA</h3>
+                            <span id="statAvgCTC" class="text-[11px] text-indigo-700 font-medium flex items-center mt-1">
+                                <i class="fa-solid fa-coins mr-1"></i> Avg: 6.2 LPA
+                            </span>
+                        </div>
+                        <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl">
+                            <i class="fa-solid fa-indian-rupee-sign"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Company Pipeline Stage Funnel Cards (Non-manager) -->
+                <div id="companyPipelineStats" class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-4 rounded-2xl border border-slate-700 shadow-sm">
+                        <div class="flex items-center justify-between text-xs text-slate-400">
+                            <span class="font-bold">COLD STAGE</span>
+                            <span class="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-[10px]">Contacted</span>
+                        </div>
+                        <h4 id="statColdCount" class="text-xl font-bold mt-2">3</h4>
+                        <p class="text-[11px] text-slate-400 mt-1">Discussion ongoing</p>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-indigo-900 to-indigo-800 text-white p-4 rounded-2xl border border-indigo-700 shadow-sm">
+                        <div class="flex items-center justify-between text-xs text-indigo-200">
+                            <span class="font-bold">WARM STAGE</span>
+                            <span class="px-2 py-0.5 rounded-full bg-indigo-400/20 text-indigo-200 text-[10px]">JD Received</span>
+                        </div>
+                        <h4 id="statWarmCount" class="text-xl font-bold mt-2">2</h4>
+                        <p class="text-[11px] text-indigo-300 mt-1">Recruitment interest</p>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-amber-900 to-amber-800 text-white p-4 rounded-2xl border border-amber-700 shadow-sm">
+                        <div class="flex items-center justify-between text-xs text-amber-200">
+                            <span class="font-bold">HOT STAGE</span>
+                            <span class="px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-200 text-[10px]">Scheduled</span>
+                        </div>
+                        <h4 id="statHotCount" class="text-xl font-bold mt-2">2</h4>
+                        <p class="text-[11px] text-amber-300 mt-1">Drive confirmed</p>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-emerald-900 to-emerald-800 text-white p-4 rounded-2xl border border-emerald-700 shadow-sm">
+                        <div class="flex items-center justify-between text-xs text-emerald-200">
+                            <span class="font-bold">DRIVES COMPLETED</span>
+                            <span class="px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-200 text-[10px]">Offers Released</span>
+                        </div>
+                        <h4 id="statCompletedCount" class="text-xl font-bold mt-2">2</h4>
+                        <p id="statTotalOffers" class="text-[11px] text-emerald-300 mt-1">77 Offers Issued</p>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-sm text-slate-800">Department Placement Distribution</h3>
+                            <span class="text-xs text-slate-400">Total 3000 Candidates</span>
+                        </div>
+                        <div class="h-64 flex items-center justify-center">
+                            <canvas id="deptChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-sm text-slate-800">Placed vs Yet-To-Be-Placed Ratio</h3>
+                            <span class="text-xs text-slate-400">Batch of 2026</span>
+                        </div>
+                        <div class="h-64 flex items-center justify-center">
+                            <canvas id="statusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- ========================================== -->
+            <!-- 2. STUDENT DIRECTORY & DEPARTMENT DRILLDOWN -->
+            <!-- ========================================== -->
+            <section id="tab-students" class="space-y-6 hidden">
+                <!-- Department Abstract Cards with Click-to-Drilldown -->
+                <div>
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-sm font-bold text-slate-800">Department Overview (Click department to filter & drill down)</h3>
+                        <button onclick="resetStudentFilters()" class="text-xs text-blue-600 hover:text-blue-700 font-semibold">
+                            View All 3000 Students
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3" id="deptPillContainer">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Filters & Search Toolbar -->
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex flex-wrap items-center gap-3">
+                        <!-- Search Box -->
+                        <div class="relative">
+                            <input type="text" id="studentSearchInput" placeholder="Search by name, roll no..."
+                                class="bg-slate-50 border border-slate-200 text-xs rounded-xl pl-8 pr-4 py-2 w-56 focus:outline-none focus:border-blue-500 focus:bg-white transition">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-xs"></i>
+                        </div>
+
+                        <!-- Department Filter -->
+                        <select id="studentDeptFilter" onchange="loadStudents(1)"
+                            class="bg-slate-50 border border-slate-200 text-xs rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-blue-500">
+                            <option value="ALL">All Departments</option>
+                            <option value="CSE">CSE</option>
+                            <option value="IT">IT</option>
+                            <option value="AIDS">AIDS</option>
+                            <option value="AIML">AIML</option>
+                            <option value="ECE">ECE</option>
+                            <option value="EEE">EEE</option>
+                            <option value="MECH">MECH</option>
+                            <option value="CIVIL">CIVIL</option>
+                        </select>
+
+                        <!-- Status Filter -->
+                        <select id="studentStatusFilter" onchange="loadStudents(1)"
+                            class="bg-slate-50 border border-slate-200 text-xs rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-blue-500">
+                            <option value="ALL">All Status</option>
+                            <option value="PLACED">Placed Only</option>
+                            <option value="YET TO BE PLACED">Yet To Be Placed</option>
+                        </select>
+
+                        <!-- Min UG Cutoff -->
+                        <select id="studentUgFilter" onchange="loadStudents(1)"
+                            class="bg-slate-50 border border-slate-200 text-xs rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-blue-500">
+                            <option value="">Any CGPA / UG %</option>
+                            <option value="75">UG >= 75%</option>
+                            <option value="80">UG >= 80%</option>
+                            <option value="85">UG >= 85%</option>
+                            <option value="90">UG >= 90% (High Achievers)</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <span id="studentCountLabel" class="text-xs text-slate-500 font-medium">Showing 0 of 3000</span>
+                        <button id="addStudentBtn" onclick="openStudentModal()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl flex items-center space-x-1 shadow-sm transition">
+                            <i class="fa-solid fa-plus mr-1"></i>
+                            <span>Add Student</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Student Table with Touch/Hover Highlighting -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto custom-scrollbar">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+                                <tr>
+                                    <th class="p-3.5 pl-5">Candidate</th>
+                                    <th class="p-3.5">Roll No</th>
+                                    <th class="p-3.5">Department</th>
+                                    <th class="p-3.5">Academic Scores (SSLC / HSC / UG)</th>
+                                    <th class="p-3.5">Status</th>
+                                    <th class="p-3.5">Placement Offer</th>
+                                    <th class="p-3.5">Links</th>
+                                    <th class="p-3.5 text-right pr-5">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentTableBody" class="divide-y divide-slate-100">
+                                <!-- Populated dynamically with .student-row class -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination Footer -->
+                    <div class="p-4 border-t border-slate-200 flex items-center justify-between bg-slate-50/50">
+                        <div class="text-xs text-slate-500" id="paginationInfo">Page 1 of 150</div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="changeStudentPage(-1)" id="prevPageBtn" class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-xs font-medium disabled:opacity-40">Previous</button>
+                            <span id="currentPageBadge" class="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 font-bold text-xs">1</span>
+                            <button onclick="changeStudentPage(1)" id="nextPageBtn" class="px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-xs font-medium disabled:opacity-40">Next</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- ========================================== -->
+            <!-- 3. COMPANY CRM & PIPELINE -->
+            <!-- ========================================== -->
+            <section id="tab-companies" class="space-y-6 hidden">
+                <!-- Admin Pending Drives Approval Notification Banner -->
+                <div id="adminPendingDrivesBanner" class="hidden bg-slate-900 text-white border border-slate-800 p-5 rounded-2xl shadow-sm">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="w-2.5 h-2.5 rounded-full bg-blue-400"></span>
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-200">
+                                Drives Forwarded for Admin Approval
+                            </h4>
+                        </div>
+                        <span id="pendingDrivesCountBadge" class="text-[11px] font-bold bg-blue-600 text-white px-2.5 py-0.5 rounded-lg">0 Forwarded</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mb-3">The following company recruitment drives have been submitted by team members for administrative review and approval:</p>
+                    <div id="pendingDrivesList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Header Toolbar & Stage Filters -->
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
+                    <!-- Status Filter Tabs -->
+                    <div class="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl text-xs font-semibold text-slate-600">
+                        <button onclick="filterCompanyStage('ALL')" id="compTab-ALL" class="comp-tab px-3 py-1.5 rounded-lg bg-white shadow-sm text-blue-600">All Companies</button>
+                        <button onclick="filterCompanyStage('COLD')" id="compTab-COLD" class="comp-tab px-3 py-1.5 rounded-lg hover:text-slate-900">Cold Stage</button>
+                        <button onclick="filterCompanyStage('WARM')" id="compTab-WARM" class="comp-tab px-3 py-1.5 rounded-lg hover:text-slate-900">Warm Stage</button>
+                        <button onclick="filterCompanyStage('HOT')" id="compTab-HOT" class="comp-tab px-3 py-1.5 rounded-lg hover:text-slate-900">Hot Stage</button>
+                        <button onclick="filterCompanyStage('DRIVE COMPLETED')" id="compTab-COMPLETED" class="comp-tab px-3 py-1.5 rounded-lg hover:text-slate-900">Drive Completed</button>
+                        <button onclick="toggleRecruiterView()" id="compTab-RECRUITER" class="comp-tab px-3 py-1.5 rounded-lg text-purple-600 hover:text-purple-700 flex items-center space-x-1">
+                            <i class="fa-solid fa-filter text-[10px]"></i>
+                            <span>Recruiter View Only</span>
+                        </button>
+                    </div>
+
+                    <div class="flex items-center space-x-3">
+                        <input type="text" id="companySearchInput" onkeyup="loadCompanies()" placeholder="Search company..."
+                            class="bg-slate-50 border border-slate-200 text-xs rounded-xl px-3 py-2 w-48 focus:outline-none focus:border-blue-500">
+                        
+                        <button onclick="openCompanyModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl flex items-center space-x-1 shadow-sm transition">
+                            <i class="fa-solid fa-plus mr-1"></i>
+                            <span>Add Company</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Company Cards / Table Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="companyCardsGrid">
+                    <!-- Populated by JS -->
+                </div>
+            </section>
+
+
+            <!-- ========================================== -->
+            <!-- 4. PLACEMENT DRIVES, ATTENDANCE & OFFERS -->
+            <!-- ========================================== -->
+            <section id="tab-placements" class="space-y-6 hidden">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Active & Scheduled Placement Drives</h3>
+                        <p class="text-xs text-slate-500">Manage candidate registrations, batch attendance marking, and offer letters</p>
+                    </div>
+                    <button onclick="openDriveModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl flex items-center space-x-1 shadow-sm transition">
+                        <i class="fa-solid fa-calendar-plus mr-1"></i>
+                        <span>Schedule Campus Drive</span>
+                    </button>
+                </div>
+
+                <!-- Drive Cards -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-5" id="placementDrivesGrid">
+                    <!-- Populated by JS -->
+                </div>
+            </section>
+
+
+            <!-- ========================================== -->
+            <!-- 5. GEMINI AI ATS RESUME ANALYZER -->
+            <!-- ========================================== -->
+            <section id="tab-ats" class="space-y-6 hidden">
+                <div class="bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
+                    <div class="max-w-2xl">
+                        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-bold border border-purple-500/30 mb-3">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>Gemini 2.5 Flash ATS Resume Evaluator</span>
+                        </div>
+                        <h3 class="text-2xl font-black mb-2">Resume Upload & ATS Match Score Engine</h3>
+                        <p class="text-purple-200/80 text-xs leading-relaxed">
+                            Upload your resume (PDF, Word DOCX, or TXT) or select a student profile to evaluate ATS keyword alignment against target Job Descriptions with 5-tier scoring.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Form Control (1 col) -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                            <h4 class="text-sm font-bold text-slate-800">Resume & JD Evaluator</h4>
+                            <div class="flex items-center bg-slate-100 p-0.5 rounded-lg text-[10px] font-bold">
+                                <button type="button" onclick="switchAtsMode('upload')" id="atsModeUploadBtn" class="px-2 py-1 rounded-md bg-white shadow-xs text-purple-700">Upload File</button>
+                                <button type="button" onclick="switchAtsMode('student')" id="atsModeStudentBtn" class="px-2 py-1 rounded-md text-slate-600 hover:text-slate-900">Student DB</button>
+                            </div>
+                        </div>
+
+                        <!-- Mode 1: File Upload Dropzone -->
+                        <div id="atsUploadModeContainer" class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Upload Your Resume (PDF / DOCX / TXT)</label>
+                                <div id="resumeDropZone" onclick="document.getElementById('atsResumeFileInput').click()"
+                                    class="border-2 border-dashed border-purple-300 hover:border-purple-500 bg-purple-50/40 hover:bg-purple-50/80 rounded-2xl p-4 text-center cursor-pointer transition flex flex-col items-center justify-center space-y-2">
+                                    <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-lg">
+                                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                                    </div>
+                                    <div class="text-xs text-slate-700 font-semibold">
+                                        <span class="text-purple-600 font-bold">Click to Browse</span> or drag & drop resume
+                                    </div>
+                                    <span class="text-[10px] text-slate-400">Supported formats: .PDF, .DOCX, .TXT (Max 10MB)</span>
+                                </div>
+                                <input type="file" id="atsResumeFileInput" accept=".pdf,.docx,.doc,.txt" onchange="handleResumeFileSelected(this)" class="hidden">
+                                
+                                <!-- File Selected Badge Preview -->
+                                <div id="selectedFileBadge" class="hidden mt-2 p-2.5 rounded-xl bg-purple-50 border border-purple-200 flex items-center justify-between text-xs">
+                                    <div class="flex items-center space-x-2 truncate">
+                                        <i class="fa-solid fa-file-pdf text-purple-600 text-sm"></i>
+                                        <span id="selectedFileName" class="font-bold text-slate-800 truncate">resume.pdf</span>
+                                        <span id="selectedFileSize" class="text-[10px] text-slate-500 shrink-0"></span>
+                                    </div>
+                                    <button type="button" onclick="clearAtsResumeFile()" class="text-rose-500 hover:text-rose-700 ml-2 p-1">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Optional: Paste raw text if needed -->
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">Or Paste Resume Text (Optional)</label>
+                                <textarea id="atsPastedResumeText" rows="3" placeholder="Paste resume plain text here..."
+                                    class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 focus:outline-none focus:border-purple-500"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Mode 2: Student DB Select (Hidden by default) -->
+                        <div id="atsStudentModeContainer" class="hidden space-y-2">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Select Registered Candidate</label>
+                            <select id="atsStudentSelect" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-purple-500">
+                                <option value="">Loading students...</option>
+                            </select>
+                        </div>
+
+                        <!-- Target Company & JD -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Target Company / Recruitment Drive</label>
+                            <select id="atsCompanySelect" onchange="handleAtsCompanyChange(this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-purple-500">
+                                <option value="">Select Target Company JD...</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="block text-xs font-semibold text-slate-600">Job Description Requirements (JD)</label>
+                                <button type="button" onclick="downloadAtsJdDocx()" title="Download as Word Document"
+                                    class="text-[10px] font-bold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded-md border border-blue-200 transition flex items-center space-x-1 cursor-pointer">
+                                    <i class="fa-solid fa-file-word text-blue-600"></i>
+                                    <span>Download as DOCS</span>
+                                </button>
+                            </div>
+                            <textarea id="atsJdText" rows="4" placeholder="Enter target Job Description requirements or select a company above..."
+                                class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs text-slate-800 focus:outline-none focus:border-purple-500"></textarea>
+                        </div>
+
+                        <button onclick="runAtsEvaluation()" id="atsRunBtn"
+                            class="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-purple-500/25 transition flex items-center justify-center space-x-2 cursor-pointer">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>Check Gemini ATS Score</span>
+                        </button>
+                    </div>
+
+                    <!-- ATS Output & Scoring Tiers (2 cols) -->
+                    <div class="lg:col-span-2 space-y-5">
+                        <!-- Score Category Guide -->
+                        <div class="grid grid-cols-5 gap-2 text-center text-[11px] font-bold">
+                            <div class="p-2 rounded-xl bg-slate-100 text-slate-600 border border-slate-200">
+                                <div>0–60%</div>
+                                <div class="text-[9px] font-normal">Low Match</div>
+                            </div>
+                            <div class="p-2 rounded-xl bg-blue-50 text-blue-700 border border-blue-200">
+                                <div>61–70%</div>
+                                <div class="text-[9px] font-normal">Category 1</div>
+                            </div>
+                            <div class="p-2 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                <div>71–80%</div>
+                                <div class="text-[9px] font-normal">Category 2</div>
+                            </div>
+                            <div class="p-2 rounded-xl bg-amber-50 text-amber-700 border border-amber-200">
+                                <div>81–90%</div>
+                                <div class="text-[9px] font-normal">Category 3</div>
+                            </div>
+                            <div class="p-2 rounded-xl bg-emerald-500 text-white shadow-md shadow-emerald-500/20 border border-emerald-600">
+                                <div>91–100% 🔥</div>
+                                <div class="text-[9px] font-normal">HIGH MATCH</div>
+                            </div>
+                        </div>
+
+                        <!-- Live Result Box -->
+                        <div id="atsResultContainer" class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm min-h-[360px] flex flex-col justify-center items-center text-center">
+                            <div class="w-16 h-16 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center text-2xl mb-3">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                            </div>
+                            <h4 class="text-sm font-bold text-slate-800">Ready for Resume Evaluation</h4>
+                            <p class="text-xs text-slate-500 max-w-sm mt-1">Upload your resume (PDF/DOCX) or select a student, choose a target company JD, and click <b>Check Gemini ATS Score</b>.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- ========================================== -->
+            <!-- 6. REPORTS & EXPORTS HUB -->
+            <!-- ========================================== -->
+            <section id="tab-reports" class="space-y-6 hidden">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Placement & Recruitment Reports Hub</h3>
+                        <p class="text-xs text-slate-500">Download formatted Excel spreadsheets (openpyxl) and Corporate PDF summaries (ReportLab)</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    <!-- Report 1: Overall Placement Summary -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg mb-3">
+                                <i class="fa-solid fa-table-list"></i>
+                            </div>
+                            <h4 class="text-sm font-bold text-slate-900">Overall Placement Report</h4>
+                            <p class="text-xs text-slate-500 mt-1">
+                                Complete list of all 3000 students showing <b>PLACED</b> with Company & CTC (LPA) vs <b>YET TO BE PLACED</b> with CTC as (<span class="font-mono text-red-500">-</span>).
+                            </p>
+                        </div>
+
+                        <div class="mt-4 pt-4 border-t border-slate-100 flex items-center space-x-2">
+                            <a href="/api/reports/overall-placement/excel?department=ALL&status=ALL"
+                                class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl text-center shadow-sm transition flex items-center justify-center space-x-1">
+                                <i class="fa-solid fa-file-excel mr-1"></i>
+                                <span>Excel</span>
+                            </a>
+                            <a href="/api/reports/overall-placement/pdf?department=ALL&status=ALL"
+                                class="flex-1 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl text-center shadow-sm transition flex items-center justify-center space-x-1">
+                                <i class="fa-solid fa-file-pdf mr-1"></i>
+                                <span>PDF Report</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Report 2: Company Stage & Pipeline Report (Non-manager) -->
+                    <div id="companyReportCard" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg mb-3">
+                                <i class="fa-solid fa-building-user"></i>
+                            </div>
+                            <h4 class="text-sm font-bold text-slate-900">Company Stage CRM Report</h4>
+                            <p class="text-xs text-slate-500 mt-1">
+                                Filter by Cold, Warm, Hot, Drive Completed. Displays creation date, added-by team member (MEM001-MEM010), and Admin approval status.
+                            </p>
+                        </div>
+
+                        <div class="mt-4 pt-4 border-t border-slate-100">
+                            <div class="flex items-center space-x-2">
+                                <select id="reportCompStage" class="bg-slate-50 border border-slate-200 text-xs rounded-xl px-2 py-2 flex-1 focus:outline-none">
+                                    <option value="ALL">All Stages</option>
+                                    <option value="COLD">Cold</option>
+                                    <option value="WARM">Warm</option>
+                                    <option value="HOT">Hot</option>
+                                    <option value="DRIVE COMPLETED">Drive Completed</option>
+                                </select>
+                                <button onclick="downloadCompanyReport()"
+                                    class="py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-sm transition flex items-center space-x-1">
+                                    <i class="fa-solid fa-download"></i>
+                                    <span>Export Excel</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Report 3: Candidate Offers Report (Non-manager) -->
+                    <div id="offersReportCard" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg mb-3">
+                                <i class="fa-solid fa-handshake-simple"></i>
+                            </div>
+                            <h4 class="text-sm font-bold text-slate-900">Candidate Offers Report</h4>
+                            <p class="text-xs text-slate-500 mt-1">
+                                Comprehensive list with S.No, Roll No, Name, Department, Job Role, Company Name, and CTC (LPA).
+                            </p>
+                        </div>
+
+                        <div class="mt-4 pt-4 border-t border-slate-100">
+                            <a href="/api/reports/offers/excel"
+                                class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl text-center shadow-sm transition flex items-center justify-center space-x-1">
+                                <i class="fa-solid fa-file-excel mr-1"></i>
+                                <span>Export Offers Excel</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- ========================================== -->
+            <!-- 7. ADMIN ACTIVITY AUDIT LOGS (Admin only) -->
+            <!-- ========================================== -->
+            <section id="tab-logs" class="space-y-6 hidden">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">System Activity & Audit Logs</h3>
+                        <p class="text-xs text-slate-500">Complete traceability of team actions, company status changes, and drive approvals</p>
+                    </div>
+                    <button onclick="loadActivityLogs()" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-semibold rounded-xl transition">
+                        <i class="fa-solid fa-rotate mr-1"></i> Refresh Logs
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto custom-scrollbar">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+                                <tr>
+                                    <th class="p-3.5 pl-5">Timestamp</th>
+                                    <th class="p-3.5">Actor / Member ID</th>
+                                    <th class="p-3.5">Action Type</th>
+                                    <th class="p-3.5">Target</th>
+                                    <th class="p-3.5">Description</th>
+                                    <th class="p-3.5 text-right pr-5">IP Address</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logsTableBody" class="divide-y divide-slate-100">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+
+    <!-- ======================================================= -->
+    <!-- MODALS & DRAWERS -->
+    <!-- ======================================================= -->
+
+    <!-- 1. HIGH MATCH 91-100% POPUP MODAL (Prominent Recruiter Highlight) -->
+    <div id="highMatchModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-emerald-500/80 rounded-3xl p-6 sm:p-8 max-w-lg w-full text-white shadow-2xl shadow-emerald-500/20 relative animate-in fade-in zoom-in duration-200">
+            <!-- Close Button -->
+            <button onclick="closeHighMatchModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <div class="text-center">
+                <div class="w-16 h-16 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center text-3xl mx-auto mb-4 animate-bounce">
+                    <i class="fa-solid fa-fire-flame-curved"></i>
+                </div>
+
+                <span class="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-extrabold uppercase tracking-wider border border-emerald-500/40">
+                    High ATS Candidate Match (91–100%)
+                </span>
+
+                <h3 class="text-2xl font-black mt-2 mb-1" id="hmScore">95% Match Score</h3>
+                <p class="text-xs text-slate-300 mb-6">Candidate strongly aligns with target job description requirements!</p>
+
+                <!-- Highlight Box (Roll No, Name, Dept) -->
+                <div class="bg-slate-800/90 border border-emerald-500/30 rounded-2xl p-4 text-left space-y-2.5 mb-6">
+                    <div class="flex items-center justify-between border-b border-slate-700 pb-2">
+                        <span class="text-xs text-slate-400">Roll Number:</span>
+                        <span id="hmRollNo" class="text-sm font-extrabold text-blue-400 font-mono">22CSE012</span>
+                    </div>
+                    <div class="flex items-center justify-between border-b border-slate-700 pb-2">
+                        <span class="text-xs text-slate-400">Student Name:</span>
+                        <span id="hmName" class="text-sm font-extrabold text-white">Aarav Sundaram</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-400">Department:</span>
+                        <span id="hmDept" class="text-xs font-bold text-emerald-400 px-2 py-0.5 rounded bg-emerald-500/10">Computer Science & Engineering</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-3">
+                    <button onclick="closeHighMatchModal()"
+                        class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition">
+                        Dismiss
+                    </button>
+                    <button onclick="shortlistCandidateFromPopup()"
+                        class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-500/25 transition flex items-center justify-center space-x-1">
+                        <i class="fa-solid fa-check mr-1"></i>
+                        <span>Instant Shortlist</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 2. STUDENT FULL PROFILE DRAWER (Side button click) -->
+    <div id="studentProfileDrawer" class="fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 flex flex-col">
+        <div class="p-5 bg-slate-900 text-white flex items-center justify-between">
+            <h3 class="font-bold text-sm">Student Detailed Profile</h3>
+            <button onclick="closeStudentDrawer()" class="text-slate-400 hover:text-white p-1">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <div class="flex-1 p-6 overflow-y-auto custom-scrollbar space-y-6" id="drawerContent">
+            <!-- Populated by JS with photo, academic history, links -->
+        </div>
+    </div>
+
+
+    <!-- 3. ADD / EDIT COMPANY MODAL -->
+    <div id="companyModal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-3xl p-6 max-w-2xl w-full shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                <h3 id="compModalTitle" class="text-base font-bold text-slate-900">Add New Company</h3>
+                <button onclick="closeCompanyModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="companyForm" onsubmit="handleCompanyFormSubmit(event)" class="space-y-4">
+                <input type="hidden" id="compFormId" value="">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Company Name *</label>
+                        <input type="text" id="compName" required placeholder="e.g. Google India"
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Location *</label>
+                        <input type="text" id="compLocation" required placeholder="e.g. Bangalore, Karnataka"
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Contact Person *</label>
+                        <input type="text" id="compContact" required placeholder="HR Manager Name"
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Mobile No (10-digit) *</label>
+                        <input type="text" id="compMobile" required placeholder="9845012345"
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Email ID *</label>
+                        <input type="email" id="compEmail" required placeholder="hr@company.com"
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Status / Stage *</label>
+                        <select id="compStatus" onchange="toggleOffersInput(this.value)"
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
+                            <option value="COLD">COLD (Discussion ongoing)</option>
+                            <option value="WARM">WARM (JD received)</option>
+                            <option value="HOT">HOT (Drive confirmed)</option>
+                            <option value="DRIVE COMPLETED">DRIVE COMPLETED</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">CTC (LPA) *</label>
+                        <input type="number" step="0.1" id="compCtc" required placeholder="e.g. 12.5"
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div id="offersCountDiv" class="hidden">
+                        <label class="block text-xs font-semibold text-emerald-700 mb-1">Total Offers Made *</label>
+                        <input type="number" id="compOffersCount" placeholder="Number of offers" value="0"
+                            class="w-full bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Website URL & Address</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <input type="url" id="compWebsite" placeholder="https://company.com"
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
+                        <input type="text" id="compAddress" placeholder="Physical Address / Tech Park"
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+
+                <!-- Proposed Drive Date & Submitter Notes -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Proposed Drive Date</label>
+                        <input type="date" id="compDriveDateProposed"
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Team Notes / Special Requirements</label>
+                        <input type="text" id="compProposalNotes" placeholder="e.g. Virtual PPT on 12th, requires CSE/IT/ECE"
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+
+                <!-- Job Description (File upload + Live Preview Box + Auto-Fill) -->
+                <div class="border border-slate-200 rounded-2xl p-4 bg-slate-50/70 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <label class="text-xs font-bold text-slate-800">Job Description (JD Document & Text)</label>
+                        <span class="text-[11px] text-blue-600">Auto-fills preview box</span>
+                    </div>
+
+                    <div class="flex items-center space-x-3">
+                        <input type="file" id="compJdFile" onchange="handleJdUpload(this)" class="text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                        <span id="jdUploadStatus" class="text-xs text-slate-500"></span>
+                    </div>
+
+                    <!-- Live JD Preview Box -->
+                    <div class="relative">
+                        <textarea id="compJdText" rows="4" placeholder="Job Description text will preview here or paste directly..."
+                            class="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-800 focus:outline-none focus:border-blue-500"></textarea>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end space-x-3 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="closeCompanyModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition">Cancel</button>
+                    <button type="submit" id="saveCompBtn" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md transition flex items-center space-x-1.5 cursor-pointer">
+                        <i class="fa-solid fa-paper-plane text-xs"></i>
+                        <span>Save & Share with Admin</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- EMAIL DISPATCH PREVIEW MODAL -->
+    <div id="emailPreviewModal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-3xl p-6 max-w-2xl w-full shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm">
+                        <i class="fa-solid fa-envelope"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">Email Notification Audit Log</h3>
+                        <span id="emailPreviewSubject" class="text-[11px] text-slate-500">Subject Details</span>
+                    </div>
+                </div>
+                <button onclick="closeEmailPreviewModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 mb-4 text-xs space-y-1">
+                <div><b>To:</b> <span id="emailPreviewTo" class="font-mono text-blue-600"></span></div>
+                <div><b>From:</b> <span id="emailPreviewFrom" class="font-mono text-slate-600"></span></div>
+                <div><b>Sent On:</b> <span id="emailPreviewSentAt" class="text-slate-500"></span> • Status: <span id="emailPreviewStatus" class="font-bold text-emerald-600"></span></div>
+            </div>
+
+            <div id="emailPreviewBody" class="border border-slate-200 rounded-2xl overflow-hidden shadow-inner bg-white min-h-[300px]">
+                <!-- HTML Email rendered here -->
+            </div>
+            
+            <div class="flex justify-end pt-4 mt-4 border-t border-slate-100">
+                <button onclick="closeEmailPreviewModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-xl">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- 4. ADD / EDIT STUDENT MODAL -->
+    <div id="studentModal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-3xl p-6 max-w-2xl w-full shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                <h3 id="studentModalTitle" class="text-base font-bold text-slate-900">Add Student Profile</h3>
+                <button onclick="closeStudentModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="studentForm" onsubmit="handleStudentFormSubmit(event)" class="space-y-4">
+                <input type="hidden" id="studentFormId" value="">
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Roll No *</label>
+                        <input type="text" id="studRollNo" required placeholder="e.g. 22CSE045"
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500 uppercase font-mono">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Student Full Name *</label>
+                        <input type="text" id="studName" required placeholder="Full Name"
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Department *</label>
+                        <select id="studDept" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
+                            <!-- Options from departments -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Gender *</label>
+                        <select id="studGender" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Residency *</label>
+                        <select id="studResidency" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
+                            <option value="Day Scholar">Day Scholar</option>
+                            <option value="Hosteller">Hosteller</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Academic Percentages -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-blue-50/50 p-3 rounded-xl border border-blue-100">
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-700 mb-1">SSLC / 10th % *</label>
+                        <input type="number" step="0.1" id="studSslc" required placeholder="85.5" class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-700 mb-1">HSC / 12th % *</label>
+                        <input type="number" step="0.1" id="studHsc" required placeholder="88.0" class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-700 mb-1">UG % / CGPA *</label>
+                        <input type="number" step="0.1" id="studUg" required placeholder="82.4" class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-700 mb-1">PG % (Optional)</label>
+                        <input type="number" step="0.1" id="studPg" placeholder="Optional" class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Email ID *</label>
+                        <input type="email" id="studEmail" required placeholder="student@college.edu.in"
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Mobile No (10-digit) *</label>
+                        <input type="text" id="studMobile" required placeholder="9845012345"
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-700 mb-1">GitHub URL</label>
+                        <input type="url" id="studGithub" placeholder="https://github.com/..." class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-700 mb-1">LinkedIn URL</label>
+                        <input type="url" id="studLinkedin" placeholder="https://linkedin.com/in/..." class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-700 mb-1">Portfolio / Drive</label>
+                        <input type="url" id="studPortfolio" placeholder="https://portfolio.dev" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs">
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end space-x-3 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="closeStudentModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition">Cancel</button>
+                    <button type="submit" id="saveStudentBtn" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md transition">Save Student</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- 5. SCHEDULE DRIVE & ISSUE OFFER MODALS -->
+    <div id="driveModal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl border border-slate-200">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                <h3 class="text-base font-bold text-slate-900">Schedule Campus Placement Drive</h3>
+                <button onclick="closeDriveModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="driveForm" onsubmit="handleDriveFormSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Select Company *</label>
+                    <select id="driveCompSelect" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs"></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Job Role Title *</label>
+                    <input type="text" id="driveRole" required placeholder="e.g. SDE-1 / Software Analyst" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">CTC (LPA) *</label>
+                        <input type="number" step="0.1" id="driveCtc" required placeholder="8.5" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Drive Date *</label>
+                        <input type="date" id="driveDate" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                    </div>
+                </div>
+                <div class="flex items-center justify-end space-x-3 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="closeDriveModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl">Schedule Drive</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Attendance & Offer Modal -->
+    <div id="offerModal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                <h3 class="text-base font-bold text-slate-900">Issue Placement Offer</h3>
+                <button onclick="closeOfferModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="offerForm" onsubmit="handleOfferFormSubmit(event)" class="space-y-4">
+                <input type="hidden" id="offerStudentId" value="">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Candidate</label>
+                    <input type="text" id="offerStudentName" readonly class="w-full bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-600 font-bold">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Company *</label>
+                    <select id="offerCompanySelect" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs"></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Role *</label>
+                    <input type="text" id="offerRole" required placeholder="e.g. SDE-1" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">CTC (LPA) *</label>
+                    <input type="number" step="0.1" id="offerCtc" required placeholder="7.5" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                </div>
+                <div class="flex items-center justify-end space-x-3 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="closeOfferModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl">Record Offer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Master Frontend JavaScript Logic -->
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
