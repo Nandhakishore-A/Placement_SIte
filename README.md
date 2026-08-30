@@ -15,7 +15,7 @@ Designed for higher-education institutions to manage 3,000+ candidate databases,
   * 1-click drive approvals, JD downloads, and audit logs.
 * **Manager (Dean of Academics - Dr. Jeyakannan Sir)**:
   * Overall Analytics Dashboard, 3,000+ Student Directory, Departmental Placement Reports.
-* **Team Lead & Placement Members (MEM001 — MEM010)**:
+* **Team Lead & Placement Members (MEM001 â€” MEM010)**:
   * Access to **Overall Analytics Dashboard** & **Company Pipeline CRM**.
   * Ability to add company proposals with proposed drive dates, review notes, and job descriptions.
 
@@ -24,10 +24,10 @@ Designed for higher-education institutions to manage 3,000+ candidate databases,
 ### 2. ?? Gemini AI ATS Resume Matcher
 * **Direct File Upload**: Upload resume files directly (.pdf, .docx, .txt) or select from the student database.
 * **Autonomous Match Scoring**:
-  * **91–100%**: Top Tier Candidate (Auto-alert badge)
-  * **75–90%**: High Match Candidate
-  * **60–74%**: Moderate Match
-  * **40–59%**: Low Match
+  * **91â€“100%**: Top Tier Candidate (Auto-alert badge)
+  * **75â€“90%**: High Match Candidate
+  * **60â€“74%**: Moderate Match
+  * **40â€“59%**: Low Match
   * **< 40%**: Poor Match
 * **Detailed Breakdown**: Identifies matched skills, missing skills, institutional recommendations, and evaluation summaries.
 
@@ -61,11 +61,11 @@ Designed for higher-education institutions to manage 3,000+ candidate databases,
 
 | Role | Username / Member ID | Password | Access Rights |
 | :--- | :--- | :--- | :--- |
-| **Admin** | dmin | Placement_head@123 | Full Suite (All 7 Modules + Verification Center) |
-| **Manager** | manager | Dean@123 | Analytics, Student Directory & Reports |
+| **Admin** | dmin | admin@123 | Full Suite (All 7 Modules + Verification Center) |
+| **Manager** | manager | manager@123 | Analytics, Student Directory & Reports |
 | **Team Lead** | lead / mem001 | 	eam123 | Overall Dashboard & Company CRM |
 | **Team Member 02** | mem002 | 	eam123 | Overall Dashboard & Company CRM |
-| **Team Member 03 — 10** | mem003 — mem010 | 	eam123 | Overall Dashboard & Company CRM |
+| **Team Member 03 â€” 10** | mem003 â€” mem010 | 	eam123 | Overall Dashboard & Company CRM |
 
 ---
 

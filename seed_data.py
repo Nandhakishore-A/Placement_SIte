@@ -27,7 +27,7 @@ def seed_database(app):
             User(
                 username="sivasubramaniyan",
                 email="sivasubramaniyan@placement.edu",
-                password_hash=hash_password("Placement_head@123"),
+                password_hash=hash_password("admin@123"),
                 role="admin",
                 member_id="ADMIN",
                 full_name="Dr. Sivasubramaniyan Sir (Placement Head)"
@@ -35,7 +35,7 @@ def seed_database(app):
             User(
                 username="jeyakannan",
                 email="jeyakannan@placement.edu",
-                password_hash=hash_password("Dean@123"),
+                password_hash=hash_password("manager@123"),
                 role="manager",
                 member_id="MANAGER",
                 full_name="Dr. Jeyakannan Sir (Dean)"
