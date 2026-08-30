@@ -62,6 +62,10 @@ def create_app():
             return redirect("/login")
         return render_template("index.html")
 
+    @app.route("/static/<path:filename>")
+    def custom_static(filename):
+        return send_from_directory(os.path.join(BASE_DIR, "static"), filename)
+
     # Health & Meta
     @app.route("/api/health")
     def health_check():
