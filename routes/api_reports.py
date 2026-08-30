@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, send_file
-from models import db, Student, Company, Offer, PlacementDrive, PlacementRegistration, PlacementAttendance
+from db_mongo import get_db
 from services.report_service import (
     generate_overall_placement_excel,
     generate_offers_excel,
@@ -20,13 +20,22 @@ def download_overall_placement_excel():
     dept_code = request.args.get("department", "ALL")
     status = request.args.get("status", "ALL")
     
-    query = Student.query
+    db = get_db()
+    filters = {}
     if dept_code != "ALL":
-        query = query.join(Student.department).filter(Student.department.has(code=dept_code))
+        filters["department_code"] = dept_code
     if status != "ALL":
-        query = query.filter(Student.placement_status == status)
+        filters["placement_status"] = status
         
-    students = [s.to_dict() for s in query.order_by(Student.roll_no.asc()).all()]
+    students_cursor = db.students.find(filters).sort("roll_no", 1)
+    students = []
+    for s in students_cursor:
+        if "_id" in s:
+            s["_id"] = str(s["_id"])
+        else:
+            s["_id"] = str(s.get("id", ""))
+        students.append(s)
+        
     excel_stream = generate_overall_placement_excel(students)
     
     filename = f"Overall_Placement_Report_{dept_code}_{status}.xlsx"
@@ -47,13 +56,22 @@ def download_overall_placement_pdf():
     dept_code = request.args.get("department", "ALL")
     status = request.args.get("status", "ALL")
     
-    query = Student.query
+    db = get_db()
+    filters = {}
     if dept_code != "ALL":
-        query = query.join(Student.department).filter(Student.department.has(code=dept_code))
+        filters["department_code"] = dept_code
     if status != "ALL":
-        query = query.filter(Student.placement_status == status)
+        filters["placement_status"] = status
         
-    students = [s.to_dict() for s in query.order_by(Student.roll_no.asc()).all()]
+    students_cursor = db.students.find(filters).sort("roll_no", 1)
+    students = []
+    for s in students_cursor:
+        if "_id" in s:
+            s["_id"] = str(s["_id"])
+        else:
+            s["_id"] = str(s.get("id", ""))
+        students.append(s)
+        
     pdf_stream = generate_overall_placement_pdf(students)
     
     filename = f"Overall_Placement_Report_{dept_code}_{status}.pdf"
@@ -72,11 +90,20 @@ def download_offers_excel():
         return jsonify({"error": "Access forbidden. Only Admin can export offers reports."}), 403
         
     company_id = request.args.get("company_id", type=int)
-    query = Offer.query
+    db = get_db()
+    filters = {}
     if company_id:
-        query = query.filter(Offer.company_id == company_id)
+        filters["company_id"] = company_id
         
-    offers = [o.to_dict() for o in query.order_by(Offer.offer_date.desc()).all()]
+    offers_cursor = db.offers.find(filters).sort("offer_date", -1)
+    offers = []
+    for o in offers_cursor:
+        if "_id" in o:
+            o["_id"] = str(o["_id"])
+        else:
+            o["_id"] = str(o.get("id", ""))
+        offers.append(o)
+        
     excel_stream = generate_offers_excel(offers)
     
     return send_file(
@@ -94,11 +121,20 @@ def download_companies_excel():
         return jsonify({"error": "Access forbidden. Only Admin can export company pipeline reports."}), 403
         
     stage = request.args.get("stage", "ALL").upper()
-    query = Company.query
+    db = get_db()
+    filters = {}
     if stage != "ALL":
-        query = query.filter(Company.status == stage)
+        filters["status"] = stage
         
-    companies = [c.to_dict() for c in query.order_by(Company.created_at.desc()).all()]
+    companies_cursor = db.companies.find(filters).sort("created_at", -1)
+    companies = []
+    for c in companies_cursor:
+        if "_id" in c:
+            c["_id"] = str(c["_id"])
+        else:
+            c["_id"] = str(c.get("id", ""))
+        companies.append(c)
+        
     excel_stream = generate_company_stage_excel(companies, filter_stage=stage)
     
     return send_file(
@@ -109,12 +145,27 @@ def download_companies_excel():
     )
 
 @reports_bp.route("/api/reports/stats", methods=["GET"])
+@reports_bp.route("/api/reports/dashboard-stats", methods=["GET"])
 @login_required
 def get_reports_summary():
     user = get_current_user()
+    db = get_db()
     
-    total_students = Student.query.count()
-    placed_students = Student.query.filter_by(placement_status="PLACED").count()
+    # 1. Fast Student Stats Aggregation (single query)
+    student_stats = list(db.students.aggregate([
+        {
+            "$group": {
+                "_id": None,
+                "total": {"$sum": 1},
+                "placed": {
+                    "$sum": {"$cond": [{"$eq": ["$placement_status", "PLACED"]}, 1, 0]}
+                }
+            }
+        }
+    ]))
+    
+    total_students = student_stats[0]["total"] if student_stats else 0
+    placed_students = student_stats[0]["placed"] if student_stats else 0
     unplaced_students = total_students - placed_students
     
     data = {
@@ -124,22 +175,37 @@ def get_reports_summary():
         "placement_percentage": round((placed_students / total_students * 100), 1) if total_students else 0
     }
     
-    # Non-manager gets company & offer stats
     if user.role != "manager":
-        data["total_companies"] = Company.query.count()
-        data["cold_companies"] = Company.query.filter_by(status="COLD").count()
-        data["warm_companies"] = Company.query.filter_by(status="WARM").count()
-        data["hot_companies"] = Company.query.filter_by(status="HOT").count()
-        data["completed_drives"] = Company.query.filter_by(status="DRIVE COMPLETED").count()
-        data["total_offers"] = Offer.query.count()
+        # 2. Fast Company Stats Aggregation (single query)
+        comp_stats = {
+            item["_id"]: item["count"]
+            for item in db.companies.aggregate([
+                {"$group": {"_id": "$status", "count": {"$sum": 1}}}
+            ])
+        }
+        data["total_companies"] = sum(comp_stats.values())
+        data["cold_companies"] = comp_stats.get("COLD", 0)
+        data["warm_companies"] = comp_stats.get("WARM", 0)
+        data["hot_companies"] = comp_stats.get("HOT", 0)
+        data["completed_drives"] = comp_stats.get("DRIVE COMPLETED", 0)
         
-        # Calculate highest & average CTC
-        offers = Offer.query.all()
-        if offers:
-            ctc_vals = [o.ctc_lpa for o in offers if o.ctc_lpa]
-            data["highest_ctc"] = max(ctc_vals) if ctc_vals else 0.0
-            data["average_ctc"] = round(sum(ctc_vals) / len(ctc_vals), 2) if ctc_vals else 0.0
+        # 3. Fast Offers Stats Aggregation (single query)
+        offer_stats = list(db.offers.aggregate([
+            {
+                "$group": {
+                    "_id": None,
+                    "total_offers": {"$sum": 1},
+                    "highest_ctc": {"$max": "$ctc_lpa"},
+                    "avg_ctc": {"$avg": "$ctc_lpa"}
+                }
+            }
+        ]))
+        if offer_stats:
+            data["total_offers"] = offer_stats[0].get("total_offers", 0)
+            data["highest_ctc"] = round(float(offer_stats[0].get("highest_ctc") or 0.0), 2)
+            data["average_ctc"] = round(float(offer_stats[0].get("avg_ctc") or 0.0), 2)
         else:
+            data["total_offers"] = 0
             data["highest_ctc"] = 0.0
             data["average_ctc"] = 0.0
             

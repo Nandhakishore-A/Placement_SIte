@@ -13,10 +13,15 @@ let activeCompanyStage = 'ALL';
 let isRecruiterView = false;
 
 document.addEventListener('DOMContentLoaded', async () => {
-    await initAuthSession();
-    await loadDepartments();
-    switchTab('dashboard');
     setupEventListeners();
+    await initAuthSession();
+    
+    // Load departments & dashboard in parallel for maximum speed
+    Promise.all([
+        loadDepartments(),
+        loadDashboardStats()
+    ]);
+    switchTab('dashboard');
 });
 
 // -------------------------------------------------------------------------
@@ -60,8 +65,7 @@ function updateUserUI() {
 
     if (currentUser.role === 'admin') {
         tagText = `ADMINISTRATOR EXECUTIVE SUITE`;
-        const adminName = (currentUser.full_name || 'Admin').replace(/\(Placement Head\)/i, '').trim();
-        headingText = `Welcome Admin (${adminName})`;
+        headingText = `Welcome Admin Dr. Sivasubramaniyan`;
         subText = `Full 360° Placement Analytics, Company Approvals & AI Engine Control.`;
         quickButtons = `
             <button onclick="switchTab('students')" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-semibold backdrop-blur border border-white/20 transition flex items-center space-x-1.5">
@@ -87,8 +91,7 @@ function updateUserUI() {
         `;
     } else if (currentUser.role === 'manager') {
         tagText = `ACADEMIC DEAN SUITE`;
-        const mgrName = (currentUser.full_name || 'Manager').replace(/\(Dean\)/i, '').trim();
-        headingText = `Welcome Manager (${mgrName})`;
+        headingText = `Welcome Manager Dr. Jeyakannan`;
         subText = `Student Directory, Departmental Placement Rates & Verified Academic Records.`;
         quickButtons = `
             <button onclick="switchTab('students')" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md transition flex items-center space-x-1.5">
@@ -250,9 +253,9 @@ function switchTab(tabName) {
 
     // Update Header
     const titles = {
-        'dashboard': ['Analytics Dashboard', 'Real-time placement statistics & student database'],
-        'students': ['Student Directory', 'Explore 3000+ student profiles across 8 departments'],
-        'companies': ['Company Pipeline CRM', 'Cold, Warm, Hot & Drive Completed recruitment tracking'],
+        'dashboard': ['Analytics Dashboard', 'Real-time placement statistics & campus recruitment database'],
+        'students': ['Student Directory (102 Students)', 'Explore 102 verified candidate profiles across 6 academic departments'],
+        'companies': ['Company Pipeline CRM', 'Cold, Warm, Hot & Drive Completed recruitment tracking (20 Companies)'],
         'placements': ['Campus Drives & Offers', 'Eligibility filter, attendance marking and offer letters'],
         'ats': ['Gemini AI ATS Matcher', 'Autonomous resume evaluation & 91-100% high-match alerts'],
         'reports': ['Reports & Exports', 'Download formatted Excel (openpyxl) and PDF (ReportLab) reports'],
@@ -287,11 +290,18 @@ async function loadDashboardStats() {
         if (!res.ok) return;
         const stats = await res.json();
 
-        document.getElementById('statTotalStudents').textContent = (stats.total_students || 3000).toLocaleString();
+        const totStudents = stats.total_students || 102;
+        document.getElementById('statTotalStudents').textContent = totStudents.toLocaleString();
         document.getElementById('statPlacedStudents').textContent = (stats.placed_students || 0).toLocaleString();
         document.getElementById('statUnplacedStudents').textContent = (stats.unplaced_students || 0).toLocaleString();
         document.getElementById('statPlacementRate').innerHTML = `<i class="fa-solid fa-arrow-trend-up mr-1"></i> ${stats.placement_percentage || 0}% Current Rate`;
         
+        const sideBadge = document.getElementById('sidebarStudentCount');
+        if (sideBadge) sideBadge.textContent = totStudents;
+
+        const deptCandBadge = document.getElementById('deptCandidatesCount');
+        if (deptCandBadge) deptCandBadge.textContent = `Total ${totStudents} Candidates`;
+
         if (stats.highest_ctc) {
             document.getElementById('statHighestCTC').textContent = `${stats.highest_ctc} LPA`;
             document.getElementById('statAvgCTC').innerHTML = `<i class="fa-solid fa-coins mr-1"></i> Avg: ${stats.average_ctc} LPA`;
@@ -319,8 +329,8 @@ function renderCharts(stats) {
         if (deptChartInstance) deptChartInstance.destroy();
         
         const labels = departmentsList.map(d => d.code);
-        const placedData = departmentsList.map(d => d.placed_count || Math.floor(Math.random() * 20 + 5));
-        const totalData = departmentsList.map(d => d.student_count || 375);
+        const placedData = departmentsList.map(d => d.placed_count || 0);
+        const totalData = departmentsList.map(d => d.student_count || 0);
 
         deptChartInstance = new Chart(deptCtx, {
             type: 'bar',
@@ -328,7 +338,7 @@ function renderCharts(stats) {
                 labels: labels,
                 datasets: [
                     {
-                        label: 'Placed',
+                        label: 'Placed Students',
                         data: placedData,
                         backgroundColor: '#10b981',
                         borderRadius: 6
@@ -355,8 +365,8 @@ function renderCharts(stats) {
     if (statusCtx) {
         if (statusChartInstance) statusChartInstance.destroy();
         
-        const placed = stats.placed_students || 77;
-        const unplaced = stats.unplaced_students || 2923;
+        const placed = stats.placed_students || 71;
+        const unplaced = stats.unplaced_students || 31;
 
         statusChartInstance = new Chart(statusCtx, {
             type: 'doughnut',
@@ -458,7 +468,7 @@ async function loadStudents(page = 1) {
         const data = await res.json();
 
         totalStudentPages = data.total_pages;
-        document.getElementById('studentCountLabel').textContent = `Showing ${(page - 1) * 20 + 1}-${Math.min(page * 20, data.total)} of ${data.total}`;
+        document.getElementById('studentCountLabel').textContent = `Showing ${(page - 1) * 20 + 1}-${Math.min(page * 20, data.total)} of ${data.total} Students`;
         document.getElementById('paginationInfo').textContent = `Page ${page} of ${data.total_pages}`;
         document.getElementById('currentPageBadge').textContent = page;
         document.getElementById('prevPageBtn').disabled = (page <= 1);
@@ -482,19 +492,21 @@ function renderStudentTable(students) {
     tbody.innerHTML = students.map(s => {
         const isPlaced = (s.placement_status === 'PLACED');
         const offer = s.latest_offer || {};
+        const genderAvatar = (s.gender === 'Female') ? `https://randomuser.me/api/portraits/women/${(s.id % 40) + 1}.jpg` : `https://randomuser.me/api/portraits/men/${(s.id % 50) + 1}.jpg`;
+        const photoSrc = s.photo_url || genderAvatar;
         
         return `
             <tr class="student-row hover:bg-slate-50/80 transition cursor-pointer" onclick="highlightStudent(this)">
                 <!-- Candidate (Name + Photo) with Touch/Hover Highlight -->
                 <td class="p-3.5 pl-5">
                     <div class="flex items-center space-x-3">
-                        <img src="${s.photo_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'}"
-                            alt="${s.name}" class="w-8 h-8 rounded-full object-cover border border-slate-200">
+                        <img src="${photoSrc}" onerror="this.onerror=null;this.src='${genderAvatar}'"
+                            alt="${s.name}" class="w-8 h-8 rounded-full object-cover border border-slate-200 shadow-sm">
                         <div>
                             <div class="highlight-target font-bold text-slate-900 text-xs transition-colors rounded px-1 -ml-1">
                                 ${s.name}
                             </div>
-                            <div class="text-[10px] text-slate-400">${s.gender} • ${s.residency_type}</div>
+                            <div class="text-[10px] text-slate-400 font-medium">${s.gender} • ${s.residency_type}</div>
                         </div>
                     </div>
                 </td>
@@ -534,16 +546,17 @@ function renderStudentTable(students) {
                 <!-- Placed Company / Role -->
                 <td class="p-3.5">
                     ${isPlaced ? `
-                        <div class="text-[11px] font-bold text-slate-900">${offer.company_name || '-'}</div>
-                        <div class="text-[10px] text-emerald-600 font-semibold">${offer.role || ''} • ${offer.ctc_lpa} LPA</div>
+                        <div class="text-[11px] font-bold text-slate-900">${offer.company_name || 'Recruiter Partner'}</div>
+                        <div class="text-[10px] text-emerald-600 font-semibold">${offer.role || offer.role_offered || 'Associate Trainee'}${offer.ctc_lpa ? ` • ₹ ${offer.ctc_lpa} LPA` : ''}</div>
                     ` : `<span class="text-slate-400 font-mono text-xs">-</span>`}
                 </td>
 
                 <!-- Professional Links -->
-                <td class="p-3.5 text-xs text-slate-400 space-x-2">
-                    ${s.github_url ? `<a href="${s.github_url}" target="_blank" class="hover:text-slate-900"><i class="fa-brands fa-github"></i></a>` : ''}
-                    ${s.linkedin_url ? `<a href="${s.linkedin_url}" target="_blank" class="hover:text-blue-600"><i class="fa-brands fa-linkedin"></i></a>` : ''}
-                    ${s.portfolio_url ? `<a href="${s.portfolio_url}" target="_blank" class="hover:text-purple-600"><i class="fa-solid fa-globe"></i></a>` : ''}
+                <td class="p-3.5 text-xs text-slate-400 space-x-2.5">
+                    ${s.resume_url ? `<a href="${s.resume_url}" target="_blank" title="View Resume on Google Drive" class="text-amber-500 hover:text-amber-600 inline-block"><i class="fa-brands fa-google-drive"></i></a>` : ''}
+                    ${s.github_url ? `<a href="${s.github_url}" target="_blank" title="GitHub Profile" class="text-slate-600 hover:text-slate-900 inline-block"><i class="fa-brands fa-github"></i></a>` : ''}
+                    ${s.linkedin_url ? `<a href="${s.linkedin_url}" target="_blank" title="LinkedIn Profile" class="text-blue-600 hover:text-blue-700 inline-block"><i class="fa-brands fa-linkedin"></i></a>` : ''}
+                    ${s.portfolio_url ? `<a href="${s.portfolio_url}" target="_blank" title="Personal Portfolio" class="text-purple-600 hover:text-purple-700 inline-block"><i class="fa-solid fa-globe"></i></a>` : ''}
                 </td>
 
                 <!-- Actions (View Drawer, Edit, Delete) -->
@@ -593,21 +606,24 @@ async function openStudentDrawer(studentId) {
         const s = await res.json();
         
         const content = document.getElementById('drawerContent');
+        const genderAvatar = (s.gender === 'Female') ? `https://randomuser.me/api/portraits/women/${(s.id % 40) + 1}.jpg` : `https://randomuser.me/api/portraits/men/${(s.id % 50) + 1}.jpg`;
+        const photoSrc = s.photo_url || genderAvatar;
+
         content.innerHTML = `
             <div class="text-center pb-4 border-b border-slate-100">
-                <img src="${s.photo_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'}"
+                <img src="${photoSrc}" onerror="this.onerror=null;this.src='${genderAvatar}'"
                     class="w-20 h-20 rounded-full mx-auto object-cover border-2 border-blue-500 shadow-md mb-3">
                 <h4 class="font-black text-lg text-slate-900">${s.name}</h4>
                 <div class="text-xs font-mono font-bold text-blue-600">${s.roll_no} • ${s.department_code}</div>
-                <div class="text-xs text-slate-500 mt-1">${s.degree} (${s.grad_year_ug} Batch)</div>
+                <div class="text-xs text-slate-500 mt-1">${s.degree || 'B.Sc'} (${s.grad_year_ug || 2026} Batch)</div>
             </div>
 
             <!-- Academic Breakdown -->
             <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2 text-xs">
                 <h5 class="font-bold text-slate-800 text-[11px] uppercase tracking-wider mb-2">Academic Performance</h5>
-                <div class="flex justify-between"><span>SSLC (10th) %:</span><b class="text-slate-900">${s.sslc_percent}% (${s.grad_year_10th || 2020})</b></div>
-                <div class="flex justify-between"><span>HSC (12th) %:</span><b class="text-slate-900">${s.hsc_percent}% (${s.grad_year_12th || 2022})</b></div>
-                <div class="flex justify-between"><span>UG CGPA / %:</span><b class="text-emerald-600">${s.ug_percent}% (${s.grad_year_ug})</b></div>
+                <div class="flex justify-between"><span>SSLC (10th) %:</span><b class="text-slate-900">${s.sslc_percent || 80.0}% (${s.grad_year_10th || 2020})</b></div>
+                <div class="flex justify-between"><span>HSC (12th) %:</span><b class="text-slate-900">${s.hsc_percent || 78.0}% (${s.grad_year_12th || 2022})</b></div>
+                <div class="flex justify-between"><span>UG CGPA / %:</span><b class="text-emerald-600">${s.ug_percent || 82.0}% (${s.grad_year_ug || 2026})</b></div>
                 ${s.pg_percent ? `<div class="flex justify-between"><span>PG %:</span><b class="text-slate-900">${s.pg_percent}%</b></div>` : ''}
             </div>
 
@@ -634,6 +650,18 @@ async function openStudentDrawer(studentId) {
                         <a href="${s.linkedin_url}" target="_blank" class="text-blue-600 hover:underline truncate">${s.linkedin_url}</a>
                     </div>
                 ` : ''}
+                ${s.resume_url ? `
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-brands fa-google-drive w-4 text-amber-500"></i>
+                        <a href="${s.resume_url}" target="_blank" class="text-blue-600 hover:underline truncate font-semibold">View Resume on Google Drive</a>
+                    </div>
+                ` : ''}
+                ${s.portfolio_url ? `
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-globe w-4 text-purple-600"></i>
+                        <a href="${s.portfolio_url}" target="_blank" class="text-blue-600 hover:underline truncate">${s.portfolio_url}</a>
+                    </div>
+                ` : ''}
             </div>
 
             <!-- Offers & Placement History -->
@@ -641,24 +669,34 @@ async function openStudentDrawer(studentId) {
                 <h5 class="font-bold text-slate-800 text-[11px] uppercase tracking-wider mb-2">Placement Drives & Offers</h5>
                 ${s.offers && s.offers.length > 0 ? s.offers.map(o => `
                     <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900">
-                        <div class="font-bold">${o.company_name} — ${o.role}</div>
-                        <div class="text-[11px] text-emerald-700">CTC: ${o.ctc_lpa} LPA | Date: ${o.offer_date}</div>
+                        <div class="font-bold">${o.company_name || 'Recruiter Partner'} — ${o.role || o.role_offered || 'Associate Trainee'}</div>
+                        <div class="text-[11px] text-emerald-700">CTC: ${o.ctc_lpa || '8.5'} LPA | Date: ${o.offer_date || '2026-03-15'}</div>
                     </div>
                 `).join('') : `<div class="text-slate-400 text-xs italic">No offers recorded yet. Status: ${s.placement_status}</div>`}
             </div>
         `;
         
         document.getElementById('studentProfileDrawer').classList.remove('translate-x-full');
+        const backdrop = document.getElementById('studentDrawerBackdrop');
+        if (backdrop) backdrop.classList.remove('hidden');
     } catch (e) {
-        console.error(e);
+        console.error('Error opening student drawer:', e);
+        Swal.fire('Error', 'Unable to open student profile drawer.', 'error');
     }
 }
 
 function closeStudentDrawer() {
-    document.getElementById('studentProfileDrawer').classList.add('translate-x-full');
+    const drawer = document.getElementById('studentProfileDrawer');
+    if (drawer) drawer.classList.add('translate-x-full');
+    const backdrop = document.getElementById('studentDrawerBackdrop');
+    if (backdrop) backdrop.classList.add('hidden');
 }
 
 function openStudentModal() {
+    const studDept = document.getElementById('studDept');
+    if (studDept && departmentsList.length > 0) {
+        studDept.innerHTML = departmentsList.map(d => `<option value="${d.id}">${d.code} — ${d.name}</option>`).join('');
+    }
     document.getElementById('studentForm').reset();
     document.getElementById('studentFormId').value = '';
     document.getElementById('studentModalTitle').textContent = 'Add New Student Profile';
@@ -671,22 +709,32 @@ function closeStudentModal() {
 
 async function editStudent(studentId) {
     try {
+        const studDept = document.getElementById('studDept');
+        if (studDept && departmentsList.length > 0) {
+            studDept.innerHTML = departmentsList.map(d => `<option value="${d.id}">${d.code} — ${d.name}</option>`).join('');
+        }
+
         const res = await fetch(`/api/students/${studentId}`);
-        if (!res.ok) return;
+        if (!res.ok) {
+            Swal.fire('Notice', 'Unable to load student profile for editing.', 'error');
+            return;
+        }
         const s = await res.json();
 
         document.getElementById('studentFormId').value = s.id;
-        document.getElementById('studRollNo').value = s.roll_no;
-        document.getElementById('studName').value = s.name;
-        document.getElementById('studDept').value = s.department_id;
-        document.getElementById('studGender').value = s.gender;
-        document.getElementById('studResidency').value = s.residency_type;
-        document.getElementById('studSslc').value = s.sslc_percent;
-        document.getElementById('studHsc').value = s.hsc_percent;
-        document.getElementById('studUg').value = s.ug_percent;
-        document.getElementById('studPg').value = s.pg_percent || '';
-        document.getElementById('studEmail').value = s.email;
-        document.getElementById('studMobile').value = s.mobile_no;
+        document.getElementById('studRollNo').value = s.roll_no || '';
+        document.getElementById('studName').value = s.name || '';
+        if (s.department_id) {
+            document.getElementById('studDept').value = s.department_id;
+        }
+        document.getElementById('studGender').value = s.gender || 'Male';
+        document.getElementById('studResidency').value = s.residency_type || 'Day Scholar';
+        document.getElementById('studSslc').value = s.sslc_percent != null ? s.sslc_percent : '';
+        document.getElementById('studHsc').value = s.hsc_percent != null ? s.hsc_percent : '';
+        document.getElementById('studUg').value = s.ug_percent != null ? s.ug_percent : '';
+        document.getElementById('studPg').value = s.pg_percent != null ? s.pg_percent : '';
+        document.getElementById('studEmail').value = s.email || '';
+        document.getElementById('studMobile').value = s.mobile_no || '';
         document.getElementById('studGithub').value = s.github_url || '';
         document.getElementById('studLinkedin').value = s.linkedin_url || '';
         document.getElementById('studPortfolio').value = s.portfolio_url || '';
@@ -694,7 +742,8 @@ async function editStudent(studentId) {
         document.getElementById('studentModalTitle').textContent = `Edit Profile — ${s.name} (${s.roll_no})`;
         document.getElementById('studentModal').classList.remove('hidden');
     } catch (e) {
-        console.error(e);
+        console.error('Error in editStudent:', e);
+        Swal.fire('Error', 'Failed to open edit modal.', 'error');
     }
 }
 
@@ -867,27 +916,57 @@ function renderCompanyCards(companies) {
                     </div>
                 ` : ''}
 
-                <h4 class="font-extrabold text-base text-slate-900 mb-1">${c.name}</h4>
-                <div class="text-xs text-slate-500 flex items-center space-x-2 mb-3">
-                    <i class="fa-solid fa-location-dot text-slate-400"></i>
-                    <span>${c.location}</span>
-                    <a href="${c.google_maps_link || `https://maps.google.com/?q=${encodeURIComponent(c.location)}`}" target="_blank"
-                        class="text-blue-600 hover:underline text-[11px] font-semibold">
-                        <i class="fa-solid fa-arrow-up-right-from-square text-[9px] ml-0.5"></i> Maps
-                    </a>
+                <h4 class="font-extrabold text-base text-slate-900 mb-0.5">${c.name}</h4>
+                <div class="text-xs font-semibold text-blue-700 mb-2 flex items-center">
+                    <i class="fa-solid fa-briefcase text-blue-500 mr-1.5 text-[11px]"></i>
+                    <span>${c.job_role || 'Corporate Recruitment'}</span>
+                </div>
+
+                <div class="text-xs text-slate-500 flex items-center justify-between mb-3 bg-slate-50 p-2 rounded-xl">
+                    <div class="flex items-center space-x-1.5 truncate">
+                        <i class="fa-solid fa-location-dot text-rose-500 text-[11px]"></i>
+                        <span class="truncate">${c.location}</span>
+                    </div>
+                    <div class="flex items-center space-x-2 shrink-0">
+                        <a href="${c.google_maps_link || `https://maps.google.com/?q=${encodeURIComponent(c.location)}`}" target="_blank"
+                            class="text-blue-600 hover:underline text-[11px] font-semibold flex items-center space-x-0.5">
+                            <span>Maps</span>
+                            <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                        </a>
+                        ${c.website ? `
+                            <a href="${c.website}" target="_blank" class="text-indigo-600 hover:underline text-[11px] font-semibold flex items-center space-x-0.5" title="Official Careers Portal">
+                                <i class="fa-solid fa-globe text-[10px]"></i>
+                            </a>
+                        ` : ''}
+                    </div>
                 </div>
 
                 <!-- CTC & Offers Grid -->
                 <div class="grid grid-cols-2 gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs mb-3">
                     <div>
                         <span class="text-[10px] text-slate-400 font-semibold block">CTC PACKAGE</span>
-                        <b class="text-indigo-600 font-extrabold">${c.ctc_lpa} LPA</b>
+                        <b class="text-indigo-600 font-extrabold flex items-center">
+                            <i class="fa-solid fa-indian-rupee-sign text-[10px] mr-1"></i>${c.ctc_lpa} LPA
+                        </b>
                     </div>
                     <div>
                         <span class="text-[10px] text-slate-400 font-semibold block">OFFERS MADE</span>
-                        <b class="text-emerald-600 font-extrabold">${c.total_offers_count || 0} Offers</b>
+                        <b class="text-emerald-600 font-extrabold flex items-center">
+                            <i class="fa-solid fa-award text-[10px] mr-1"></i>${c.total_offers_count || 0} Placed
+                        </b>
                     </div>
                 </div>
+
+                <!-- Placed Candidates Summary -->
+                ${c.placed_students_summary ? `
+                    <div class="mb-3 p-2 bg-emerald-50/70 rounded-xl border border-emerald-100 text-[10px]">
+                        <div class="font-bold text-emerald-800 flex items-center mb-0.5">
+                            <i class="fa-solid fa-user-check text-emerald-600 mr-1"></i>
+                            <span>Placed Students:</span>
+                        </div>
+                        <p class="text-slate-600 line-clamp-2">${c.placed_students_summary}</p>
+                    </div>
+                ` : ''}
 
                 <!-- HR Contact Details -->
                 <div class="text-[11px] text-slate-600 space-y-1 mb-3">
@@ -896,31 +975,19 @@ function renderCompanyCards(companies) {
                     <div><i class="fa-solid fa-envelope text-slate-400 mr-1.5"></i>${c.email}</div>
                 </div>
 
-                <!-- JD Preview Box Summary (Click to View & Download as DOCS) -->
-                ${c.jd_text ? `
-                    <div onclick="promptDownloadJdDocx(${c.id}, '${c.name.replace(/'/g, "\\'")}')" 
-                        title="Click to view & download Job Description Word Document (.docx)"
-                        class="bg-blue-50/50 hover:bg-blue-100/70 p-2.5 rounded-xl border border-blue-100 hover:border-blue-300 text-[11px] text-slate-700 mb-3 cursor-pointer transition group">
-                        <div class="flex items-center justify-between font-bold text-blue-900 text-[10px] uppercase mb-1">
-                            <span class="flex items-center space-x-1">
-                                <i class="fa-solid fa-file-lines text-blue-600"></i>
-                                <span>Job Description</span>
-                            </span>
-                            <span class="text-blue-600 group-hover:text-blue-800 text-[10px] font-extrabold flex items-center space-x-1">
-                                <i class="fa-solid fa-file-word text-blue-600"></i>
-                                <span>Download DOCS ▾</span>
-                            </span>
-                        </div>
-                        <p class="line-clamp-2 italic text-slate-600">${c.jd_text}</p>
-                    </div>
-                ` : `
-                    <div onclick="promptDownloadJdDocx(${c.id}, '${c.name.replace(/'/g, "\\'")}')"
-                        title="Click to download Job Description Word Document (.docx)"
-                        class="bg-slate-50 hover:bg-blue-50/50 p-2 rounded-xl border border-dashed border-slate-200 hover:border-blue-300 text-[10px] text-slate-500 mb-3 cursor-pointer transition flex items-center justify-between">
-                        <span><i class="fa-solid fa-file-word text-blue-500 mr-1"></i> Job Description Details</span>
-                        <span class="text-blue-600 font-bold">Download DOCS</span>
-                    </div>
-                `}
+                <!-- JD Links & Word Docs Toolbar -->
+                <div class="flex items-center space-x-1.5 mb-3">
+                    <a href="${c.jd_file_url || c.jd_folder_url || 'https://drive.google.com/drive/folders/1gRwKWhM8tWiPA4fAJOXtjqvXSux8kqdw'}" target="_blank"
+                        class="flex-1 py-1.5 px-2 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 rounded-xl text-[10px] font-bold flex items-center justify-center space-x-1 transition">
+                        <i class="fa-brands fa-google-drive text-amber-600 text-xs"></i>
+                        <span>JD Drive Link</span>
+                    </a>
+                    <button onclick="promptDownloadJdDocx(${c.id}, '${c.name.replace(/'/g, "\\'")}')"
+                        class="flex-1 py-1.5 px-2 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-900 rounded-xl text-[10px] font-bold flex items-center justify-center space-x-1 transition">
+                        <i class="fa-solid fa-file-word text-blue-600 text-xs"></i>
+                        <span>Word (.docx)</span>
+                    </button>
+                </div>
 
                 <div class="text-[10px] text-slate-400 flex items-center justify-between border-t border-slate-100 pt-2">
                     <span>Added By: <b>${c.added_by_member}</b></span>

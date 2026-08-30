@@ -82,7 +82,7 @@
                 class="nav-item w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">
                 <i class="fa-solid fa-user-graduate w-5 text-center text-emerald-400"></i>
                 <span>Student Directory</span>
-                <span class="ml-auto text-xs bg-slate-800 px-2 py-0.5 rounded-full text-slate-400">3000</span>
+                <span id="sidebarStudentCount" class="ml-auto text-xs bg-slate-800 px-2 py-0.5 rounded-full text-slate-400 font-semibold">102</span>
             </button>
 
             <!-- Company Management (Non-manager) -->
@@ -180,7 +180,7 @@
                             <span id="welcomeRoleTag">PORTAL ACCESS ACTIVE</span>
                         </div>
                         <h1 id="welcomeUserHeading" class="text-2xl sm:text-3xl font-extrabold tracking-tight">
-                            Welcome Admin (Sivasubramaniyan Sir)
+                            Welcome Admin Dr. Sivasubramaniyan
                         </h1>
                         <p id="welcomeUserSubheading" class="text-xs sm:text-sm text-blue-100/80 mt-1 max-w-xl">
                             Overall Placement Analytics & Campus Drive Management Suite.
@@ -234,9 +234,9 @@
                     <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
                         <div>
                             <span class="text-xs font-semibold text-slate-500">Total Registered Candidates</span>
-                            <h3 id="statTotalStudents" class="text-2xl font-extrabold text-slate-900 mt-1">3,000</h3>
+                            <h3 id="statTotalStudents" class="text-2xl font-extrabold text-slate-900 mt-1">102</h3>
                             <span class="text-[11px] text-emerald-600 font-medium flex items-center mt-1">
-                                <i class="fa-solid fa-users mr-1"></i> Across 8 Engineering Depts
+                                <i class="fa-solid fa-users mr-1"></i> Across Active Academic Depts
                             </span>
                         </div>
                         <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
@@ -248,9 +248,9 @@
                     <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
                         <div>
                             <span class="text-xs font-semibold text-slate-500">Placed Candidates</span>
-                            <h3 id="statPlacedStudents" class="text-2xl font-extrabold text-emerald-600 mt-1">77</h3>
+                            <h3 id="statPlacedStudents" class="text-2xl font-extrabold text-emerald-600 mt-1">71</h3>
                             <span id="statPlacementRate" class="text-[11px] text-emerald-700 font-semibold flex items-center mt-1">
-                                <i class="fa-solid fa-arrow-trend-up mr-1"></i> 2.6% Current Rate
+                                <i class="fa-solid fa-arrow-trend-up mr-1"></i> 69.6% Placement Rate
                             </span>
                         </div>
                         <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
@@ -262,7 +262,7 @@
                     <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
                         <div>
                             <span class="text-xs font-semibold text-slate-500">Yet To Be Placed</span>
-                            <h3 id="statUnplacedStudents" class="text-2xl font-extrabold text-amber-600 mt-1">2,923</h3>
+                            <h3 id="statUnplacedStudents" class="text-2xl font-extrabold text-amber-600 mt-1">31</h3>
                             <span class="text-[11px] text-slate-500 font-medium flex items-center mt-1">
                                 <i class="fa-solid fa-circle-notch mr-1"></i> In Active Preparation
                             </span>
@@ -276,9 +276,9 @@
                     <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
                         <div>
                             <span class="text-xs font-semibold text-slate-500">Highest / Average CTC</span>
-                            <h3 id="statHighestCTC" class="text-2xl font-extrabold text-indigo-600 mt-1">6.5 LPA</h3>
+                            <h3 id="statHighestCTC" class="text-2xl font-extrabold text-indigo-600 mt-1">24.0 LPA</h3>
                             <span id="statAvgCTC" class="text-[11px] text-indigo-700 font-medium flex items-center mt-1">
-                                <i class="fa-solid fa-coins mr-1"></i> Avg: 6.2 LPA
+                                <i class="fa-solid fa-coins mr-1"></i> Avg: 13.04 LPA
                             </span>
                         </div>
                         <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl">
@@ -294,8 +294,8 @@
                             <span class="font-bold">COLD STAGE</span>
                             <span class="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-[10px]">Contacted</span>
                         </div>
-                        <h4 id="statColdCount" class="text-xl font-bold mt-2">3</h4>
-                        <p class="text-[11px] text-slate-400 mt-1">Discussion ongoing</p>
+                        <h4 id="statColdCount" class="text-xl font-bold mt-2">0</h4>
+                        <p class="text-[11px] text-slate-400 mt-1">Sourcing pipeline</p>
                     </div>
 
                     <div class="bg-gradient-to-br from-indigo-900 to-indigo-800 text-white p-4 rounded-2xl border border-indigo-700 shadow-sm">
@@ -303,8 +303,8 @@
                             <span class="font-bold">WARM STAGE</span>
                             <span class="px-2 py-0.5 rounded-full bg-indigo-400/20 text-indigo-200 text-[10px]">JD Received</span>
                         </div>
-                        <h4 id="statWarmCount" class="text-xl font-bold mt-2">2</h4>
-                        <p class="text-[11px] text-indigo-300 mt-1">Recruitment interest</p>
+                        <h4 id="statWarmCount" class="text-xl font-bold mt-2">1</h4>
+                        <p class="text-[11px] text-indigo-300 mt-1">Oracle India</p>
                     </div>
 
                     <div class="bg-gradient-to-br from-amber-900 to-amber-800 text-white p-4 rounded-2xl border border-amber-700 shadow-sm">
@@ -312,8 +312,8 @@
                             <span class="font-bold">HOT STAGE</span>
                             <span class="px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-200 text-[10px]">Scheduled</span>
                         </div>
-                        <h4 id="statHotCount" class="text-xl font-bold mt-2">2</h4>
-                        <p class="text-[11px] text-amber-300 mt-1">Drive confirmed</p>
+                        <h4 id="statHotCount" class="text-xl font-bold mt-2">0</h4>
+                        <p class="text-[11px] text-amber-300 mt-1">Upcoming drives</p>
                     </div>
 
                     <div class="bg-gradient-to-br from-emerald-900 to-emerald-800 text-white p-4 rounded-2xl border border-emerald-700 shadow-sm">
@@ -321,8 +321,8 @@
                             <span class="font-bold">DRIVES COMPLETED</span>
                             <span class="px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-200 text-[10px]">Offers Released</span>
                         </div>
-                        <h4 id="statCompletedCount" class="text-xl font-bold mt-2">2</h4>
-                        <p id="statTotalOffers" class="text-[11px] text-emerald-300 mt-1">77 Offers Issued</p>
+                        <h4 id="statCompletedCount" class="text-xl font-bold mt-2">19</h4>
+                        <p id="statTotalOffers" class="text-[11px] text-emerald-300 mt-1 font-semibold">71 Offers Issued</p>
                     </div>
                 </div>
 
@@ -331,7 +331,7 @@
                     <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="font-bold text-sm text-slate-800">Department Placement Distribution</h3>
-                            <span class="text-xs text-slate-400">Total 3000 Candidates</span>
+                            <span id="deptCandidatesCount" class="text-xs text-slate-400">Total 102 Candidates</span>
                         </div>
                         <div class="h-64 flex items-center justify-center">
                             <canvas id="deptChart"></canvas>
@@ -341,7 +341,7 @@
                     <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="font-bold text-sm text-slate-800">Placed vs Yet-To-Be-Placed Ratio</h3>
-                            <span class="text-xs text-slate-400">Batch of 2026</span>
+                            <span class="text-xs text-slate-400">Batch of 2027</span>
                         </div>
                         <div class="h-64 flex items-center justify-center">
                             <canvas id="statusChart"></canvas>
@@ -359,11 +359,12 @@
                 <div>
                     <div class="flex items-center justify-between mb-3">
                         <h3 class="text-sm font-bold text-slate-800">Department Overview (Click department to filter & drill down)</h3>
-                        <button onclick="resetStudentFilters()" class="text-xs text-blue-600 hover:text-blue-700 font-semibold">
-                            View All 3000 Students
+                        <button onclick="resetStudentFilters()" class="text-xs text-blue-600 hover:text-blue-700 font-semibold flex items-center space-x-1">
+                            <i class="fa-solid fa-arrows-rotate mr-1"></i>
+                            <span>View All 102 Students</span>
                         </button>
                     </div>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3" id="deptPillContainer">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3" id="deptPillContainer">
                         <!-- Populated by JS -->
                     </div>
                 </div>
@@ -382,22 +383,20 @@
                         <select id="studentDeptFilter" onchange="loadStudents(1)"
                             class="bg-slate-50 border border-slate-200 text-xs rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-blue-500">
                             <option value="ALL">All Departments</option>
-                            <option value="CSE">CSE</option>
-                            <option value="IT">IT</option>
-                            <option value="AIDS">AIDS</option>
-                            <option value="AIML">AIML</option>
-                            <option value="ECE">ECE</option>
-                            <option value="EEE">EEE</option>
-                            <option value="MECH">MECH</option>
-                            <option value="CIVIL">CIVIL</option>
+                            <option value="BCY">BCY — Cyber Security</option>
+                            <option value="BCS">BCS — Computer Science</option>
+                            <option value="BIT">BIT — Information Technology</option>
+                            <option value="AIDS">AIDS — BSC CS WITH AI INTEL</option>
+                            <option value="BEC">BEC — Electronics and Comm</option>
+                            <option value="BBA">BBA — Business Administration</option>
                         </select>
 
                         <!-- Status Filter -->
                         <select id="studentStatusFilter" onchange="loadStudents(1)"
                             class="bg-slate-50 border border-slate-200 text-xs rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:border-blue-500">
                             <option value="ALL">All Status</option>
-                            <option value="PLACED">Placed Only</option>
-                            <option value="YET TO BE PLACED">Yet To Be Placed</option>
+                            <option value="PLACED">Placed Only (71)</option>
+                            <option value="YET TO BE PLACED">Yet To Be Placed (31)</option>
                         </select>
 
                         <!-- Min UG Cutoff -->
@@ -412,7 +411,7 @@
                     </div>
 
                     <div class="flex items-center space-x-2">
-                        <span id="studentCountLabel" class="text-xs text-slate-500 font-medium">Showing 0 of 3000</span>
+                        <span id="studentCountLabel" class="text-xs text-slate-500 font-medium">Showing 1-20 of 102 Students</span>
                         <button id="addStudentBtn" onclick="openStudentModal()" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl flex items-center space-x-1 shadow-sm transition">
                             <i class="fa-solid fa-plus mr-1"></i>
                             <span>Add Student</span>
@@ -691,7 +690,7 @@
                             </div>
                             <h4 class="text-sm font-bold text-slate-900">Overall Placement Report</h4>
                             <p class="text-xs text-slate-500 mt-1">
-                                Complete list of all 3000 students showing <b>PLACED</b> with Company & CTC (LPA) vs <b>YET TO BE PLACED</b> with CTC as (<span class="font-mono text-red-500">-</span>).
+                                Complete directory of all candidates showing <b>PLACED</b> with Company & CTC (LPA) vs <b>YET TO BE PLACED</b> with CTC as (<span class="font-mono text-red-500">-</span>).
                             </p>
                         </div>
 
@@ -830,15 +829,15 @@
                 <div class="bg-slate-800/90 border border-emerald-500/30 rounded-2xl p-4 text-left space-y-2.5 mb-6">
                     <div class="flex items-center justify-between border-b border-slate-700 pb-2">
                         <span class="text-xs text-slate-400">Roll Number:</span>
-                        <span id="hmRollNo" class="text-sm font-extrabold text-blue-400 font-mono">22CSE012</span>
+                        <span id="hmRollNo" class="text-sm font-extrabold text-blue-400 font-mono">RCAS2024BCY046</span>
                     </div>
                     <div class="flex items-center justify-between border-b border-slate-700 pb-2">
                         <span class="text-xs text-slate-400">Student Name:</span>
-                        <span id="hmName" class="text-sm font-extrabold text-white">Aarav Sundaram</span>
+                        <span id="hmName" class="text-sm font-extrabold text-white">INBAVARUNAN S</span>
                     </div>
                     <div class="flex items-center justify-between">
                         <span class="text-xs text-slate-400">Department:</span>
-                        <span id="hmDept" class="text-xs font-bold text-emerald-400 px-2 py-0.5 rounded bg-emerald-500/10">Computer Science & Engineering</span>
+                        <span id="hmDept" class="text-xs font-bold text-emerald-400 px-2 py-0.5 rounded bg-emerald-500/10">Cyber Security</span>
                     </div>
                 </div>
 
@@ -859,6 +858,7 @@
 
 
     <!-- 2. STUDENT FULL PROFILE DRAWER (Side button click) -->
+    <div id="studentDrawerBackdrop" onclick="closeStudentDrawer()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-40 hidden transition-opacity"></div>
     <div id="studentProfileDrawer" class="fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-300 flex flex-col">
         <div class="p-5 bg-slate-900 text-white flex items-center justify-between">
             <h3 class="font-bold text-sm">Student Detailed Profile</h3>
@@ -1208,6 +1208,6 @@
 
 
     <!-- Master Frontend JavaScript Logic -->
-    <script src="/static/js/main.js"></script>
+    <script src="/static/js/main.js?v=4.0.0"></script>
 </body>
 </html>

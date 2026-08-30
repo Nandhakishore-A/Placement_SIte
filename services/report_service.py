@@ -470,7 +470,7 @@ def generate_jd_docx(company_data: dict) -> io.BytesIO:
         run.font.color.rgb = RGBColor(37, 99, 235)
 
     eligibility_points = [
-        "Degree & Branches: B.E / B.Tech / M.E in CSE, IT, AI&DS, AIML, ECE, EEE, Mechanical, Civil.",
+        "Degree & Branches: B.E / B.Tech / B.Sc / BBA in Cyber Security (BCY), Computer Science (BCS), Information Technology (BIT), BSC CS with AI Intel (AIDS), Electronics & Communication (BEC), Business Administration (BBA).",
         "Academic Cut-off: Minimum 60.0% (6.0 CGPA) in 10th, 12th, and UG with No Standing Arrears.",
         "Core Skills: Strong foundation in Data Structures, Algorithms, Problem Solving, and Database Design.",
         "Technical Stack: Proficiency in at least one modern language (Python, Java, C++, JavaScript/TypeScript, SQL).",

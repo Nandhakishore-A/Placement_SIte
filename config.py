@@ -37,13 +37,20 @@ class Config:
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
+    # MongoDB Atlas
+    MONGO_URI = os.getenv(
+        "MONGO_URI",
+        "mongodb+srv://nandhakishore252_db_user:w6SpqTWjNLynyZ0V@cluster0.qvm6fpo.mongodb.net/placement_db?retryWrites=true&w=majority&appName=Cluster0"
+    )
+    MONGO_DBNAME = os.getenv("MONGO_DBNAME", "placement_db")
+    
     # Gemini AI
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
     
     # Cloudinary
-    CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME", "")
-    CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY", "")
-    CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET", "")
+    CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME", "zsfupefr")
+    CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY", "956281599364653")
+    CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET", "UJ5UEJgFVt17dwgd4vAK3YQ_6HM")
     
     # Uploads
     UPLOAD_FOLDER = upload_folder

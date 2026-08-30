@@ -2,8 +2,8 @@ import os
 from flask import Flask, render_template, send_from_directory, jsonify, redirect, url_for, session
 from flask_cors import CORS
 from config import Config, BASE_DIR
-from models import db
 from auth import login_required, get_current_user
+from db_mongo import init_mongo_indexes, get_db
 
 # Import API blueprints
 from routes.api_auth import auth_bp
@@ -13,7 +13,6 @@ from routes.api_placements import placements_bp
 from routes.api_ats import ats_bp
 from routes.api_reports import reports_bp
 from routes.api_upload import upload_bp
-from seed_data import seed_database
 
 def create_app():
     app = Flask(
@@ -24,7 +23,12 @@ def create_app():
     app.config.from_object(Config)
     
     CORS(app)
-    db.init_app(app)
+    
+    # Initialize MongoDB Indexes
+    try:
+        init_mongo_indexes()
+    except Exception as e:
+        print(f"[WARN] MongoDB Index initialization notice: {e}")
     
     # Register API Blueprints
     app.register_blueprint(auth_bp)
@@ -61,18 +65,26 @@ def create_app():
     # Health & Meta
     @app.route("/api/health")
     def health_check():
-        return jsonify({"status": "healthy", "service": "Placement Management System API", "version": "1.0.0"})
+        return jsonify({
+            "status": "healthy",
+            "database": "MongoDB Atlas",
+            "cloud_storage": "Cloudinary",
+            "service": "Placement Management System API",
+            "version": "1.0.0"
+        })
 
+    @app.after_request
+    def add_header(response):
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        return response
+        
     return app
 
 app = create_app()
 
 if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()
-        # Seed default database if empty
-        seed_database(app)
-    
     port = int(os.environ.get("PORT", 5000))
-    print(f"[OK] Placement Management System running on http://127.0.0.1:{port}")
+    print(f"[OK] Placement Management System running with MongoDB Atlas on http://127.0.0.1:{port}")
     app.run(host="0.0.0.0", port=port, debug=False)

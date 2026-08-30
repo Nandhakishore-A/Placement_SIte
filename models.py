@@ -35,7 +35,7 @@ class Department(db.Model):
     __tablename__ = "departments"
     
     id = db.Column(db.Integer, primary_key=True)
-    code = db.Column(db.String(20), unique=True, nullable=False)  # CSE, IT, ECE, EEE, MECH, CIVIL, AIDS, AIML
+    code = db.Column(db.String(20), unique=True, nullable=False)  # BCY, BCS, BIT, AIDS, BEC, BBA
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=True)
     

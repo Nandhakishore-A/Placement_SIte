@@ -1,10 +1,23 @@
+from datetime import datetime
 from flask import Blueprint, request, jsonify
 from werkzeug.utils import secure_filename
-from models import db, Student, Company, PlacementDrive, ATSAnalysis
+from db_mongo import get_db, get_next_sequence
 from services.gemini_service import analyze_resume_ats, analyze_raw_resume_text, extract_text_from_file, get_category_for_score
 from auth import login_required, get_current_user, log_activity
 
 ats_bp = Blueprint("ats_bp", __name__)
+
+def ats_to_dict(doc):
+    if not doc:
+        return {}
+    res = dict(doc)
+    if "_id" in res:
+        res["_id"] = str(res["_id"])
+    else:
+        res["_id"] = str(res.get("id", ""))
+    if isinstance(res.get("created_at"), datetime):
+        res["created_at"] = res["created_at"].strftime("%Y-%m-%d %H:%M:%S")
+    return res
 
 @ats_bp.route("/api/ats/upload-and-analyze", methods=["POST"])
 @login_required
@@ -17,14 +30,12 @@ def upload_and_analyze_resume():
     file_name = ""
     json_data = request.get_json(silent=True) or {}
     
-    # Check if a file was uploaded
     if "resume_file" in request.files:
         file = request.files["resume_file"]
         if file and file.filename != "":
             file_name = secure_filename(file.filename)
             resume_text = extract_text_from_file(file, file_name)
             
-    # Fallback to pasted text if file empty or text provided directly
     if not resume_text:
         resume_text = request.form.get("pasted_resume_text", "").strip() or json_data.get("pasted_resume_text", "").strip()
         
@@ -36,49 +47,51 @@ def upload_and_analyze_resume():
     jd_text = (request.form.get("jd_text", "") or json_data.get("jd_text", "")).strip()
     role_name = (request.form.get("role_name", "") or json_data.get("role_name", "")).strip()
 
-    company = Company.query.get(company_id) if company_id else None
+    db = get_db()
+    company = db.companies.find_one({"id": int(company_id)}) if company_id else None
     if not jd_text:
-        if company and company.jd_text:
-            jd_text = company.jd_text
+        if company and company.get("jd_text"):
+            jd_text = company["jd_text"]
         else:
             jd_text = "Software Engineer / Developer position requiring strong problem solving, coding proficiency, algorithms, web technologies, and database design."
 
     if not role_name and company:
-        role_name = f"Role at {company.name}"
+        role_name = f"Role at {company.get('name')}"
 
     candidate_label = file_name if file_name else "Uploaded Candidate"
+    student = None
     if student_id:
-        s = Student.query.get(student_id)
-        if s:
-            candidate_label = f"{s.name} ({s.roll_no})"
+        student = db.students.find_one({"id": int(student_id)})
+        if student:
+            candidate_label = f"{student.get('name')} ({student.get('roll_no')})"
 
     analysis_res = analyze_raw_resume_text(resume_text, jd_text, role_name, candidate_label)
 
     # Save to database if student_id is provided
-    if student_id:
-        student = Student.query.get(student_id)
-        if student:
-            ats_record = ATSAnalysis.query.filter_by(student_id=student.id, company_id=company_id).first()
-            if not ats_record:
-                ats_record = ATSAnalysis(
-                    student_id=student.id,
-                    company_id=company_id,
-                    ats_score=analysis_res["ats_score"],
-                    category=analysis_res["category"],
-                    matched_skills=",".join(analysis_res["matched_skills"]),
-                    missing_skills=",".join(analysis_res["missing_skills"]),
-                    summary=analysis_res["summary"],
-                    analyzed_by_id=user.id
-                )
-                db.session.add(ats_record)
-            else:
-                ats_record.ats_score = analysis_res["ats_score"]
-                ats_record.category = analysis_res["category"]
-                ats_record.matched_skills = ",".join(analysis_res["matched_skills"])
-                ats_record.missing_skills = ",".join(analysis_res["missing_skills"])
-                ats_record.summary = analysis_res["summary"]
-                ats_record.analyzed_by_id = user.id
-            db.session.commit()
+    if student_id and student:
+        next_id = get_next_sequence("ats_id")
+        db.ats_analyses.update_one(
+            {"student_id": int(student_id), "company_id": int(company_id) if company_id else None},
+            {
+                "$set": {
+                    "id": next_id,
+                    "student_id": int(student_id),
+                    "student_roll_no": student.get("roll_no"),
+                    "student_name": student.get("name"),
+                    "department_code": student.get("department_code"),
+                    "company_id": int(company_id) if company_id else None,
+                    "company_name": company.get("name") if company else "General Drive",
+                    "ats_score": analysis_res["ats_score"],
+                    "category": analysis_res["category"],
+                    "matched_skills": ",".join(analysis_res["matched_skills"]),
+                    "missing_skills": ",".join(analysis_res["missing_skills"]),
+                    "summary": analysis_res["summary"],
+                    "analyzed_by_id": user.id,
+                    "created_at": datetime.utcnow()
+                }
+            },
+            upsert=True
+        )
 
     log_activity(
         user.id,
@@ -90,7 +103,7 @@ def upload_and_analyze_resume():
 
     analysis_res["candidate_label"] = candidate_label
     analysis_res["file_name"] = file_name
-    analysis_res["company_name"] = company.name if company else "General Drive"
+    analysis_res["company_name"] = company.get("name") if company else "General Drive"
     analysis_res["role_name"] = role_name
     analysis_res["high_match_popup"] = {
         "trigger_popup": analysis_res["is_high_match"],
@@ -118,63 +131,66 @@ def analyze_ats():
     if not student_id:
         return jsonify({"error": "student_id is required."}), 400
         
-    student = Student.query.get_or_404(student_id)
-    company = Company.query.get(company_id) if company_id else None
+    db = get_db()
+    student = db.students.find_one({"id": int(student_id)})
+    if not student:
+        return jsonify({"error": "Student not found"}), 404
+        
+    company = db.companies.find_one({"id": int(company_id)}) if company_id else None
     
     if not jd_text:
-        if company and company.jd_text:
-            jd_text = company.jd_text
+        if company and company.get("jd_text"):
+            jd_text = company["jd_text"]
         else:
             jd_text = "Software Engineer / Developer position requiring strong problem solving, coding proficiency, algorithms, web technologies, and database design."
             
     if not role_name and company:
-        role_name = f"Role at {company.name}"
+        role_name = f"Role at {company.get('name')}"
         
-    student_dict = student.to_dict()
+    student_dict = dict(student)
     analysis_res = analyze_resume_ats(student_dict, jd_text, role_name)
     
-    # Save or update in database
-    ats_record = ATSAnalysis.query.filter_by(student_id=student.id, company_id=company_id).first()
-    if not ats_record:
-        ats_record = ATSAnalysis(
-            student_id=student.id,
-            company_id=company_id,
-            drive_id=drive_id,
-            ats_score=analysis_res["ats_score"],
-            category=analysis_res["category"],
-            matched_skills=",".join(analysis_res["matched_skills"]),
-            missing_skills=",".join(analysis_res["missing_skills"]),
-            summary=analysis_res["summary"],
-            analyzed_by_id=user.id
-        )
-        db.session.add(ats_record)
-    else:
-        ats_record.ats_score = analysis_res["ats_score"]
-        ats_record.category = analysis_res["category"]
-        ats_record.matched_skills = ",".join(analysis_res["matched_skills"])
-        ats_record.missing_skills = ",".join(analysis_res["missing_skills"])
-        ats_record.summary = analysis_res["summary"]
-        ats_record.analyzed_by_id = user.id
-        
-    db.session.commit()
+    next_id = get_next_sequence("ats_id")
+    ats_doc = {
+        "id": next_id,
+        "student_id": int(student_id),
+        "student_roll_no": student.get("roll_no"),
+        "student_name": student.get("name"),
+        "department_code": student.get("department_code"),
+        "company_id": int(company_id) if company_id else None,
+        "company_name": company.get("name") if company else "Campus Drive",
+        "drive_id": int(drive_id) if drive_id else None,
+        "ats_score": analysis_res["ats_score"],
+        "category": analysis_res["category"],
+        "matched_skills": ",".join(analysis_res["matched_skills"]),
+        "missing_skills": ",".join(analysis_res["missing_skills"]),
+        "summary": analysis_res["summary"],
+        "analyzed_by_id": user.id,
+        "created_at": datetime.utcnow()
+    }
+    
+    db.ats_analyses.update_one(
+        {"student_id": int(student_id), "company_id": int(company_id) if company_id else None},
+        {"$set": ats_doc},
+        upsert=True
+    )
     
     log_activity(
         user.id,
         "ATS_ANALYSIS",
         "ATSAnalysis",
-        ats_record.id,
-        f"ATS scan for {student.name} ({student.roll_no}) scored {analysis_res['ats_score']}% [{analysis_res['category']}]"
+        next_id,
+        f"ATS scan for {student.get('name')} ({student.get('roll_no')}) scored {analysis_res['ats_score']}% [{analysis_res['category']}]"
     )
     
-    response_data = ats_record.to_dict()
-    # Ensure popup details for 91-100% are prominent
-    if ats_record.ats_score >= 91:
+    response_data = ats_to_dict(ats_doc)
+    if ats_doc["ats_score"] >= 91:
         response_data["high_match_popup"] = {
             "trigger_popup": True,
-            "roll_no": student.roll_no,
-            "name": student.name,
-            "department": student.department.code if student.department else "",
-            "score": ats_record.ats_score,
+            "roll_no": student.get("roll_no"),
+            "name": student.get("name"),
+            "department": student.get("department_code", ""),
+            "score": ats_doc["ats_score"],
             "category": "91-100 (HIGH MATCH)"
         }
     else:
@@ -195,51 +211,62 @@ def batch_analyze_ats():
     limit = int(data.get("limit", 20))
     jd_text = data.get("jd_text", "").strip()
     
-    company = Company.query.get(company_id) if company_id else None
+    db = get_db()
+    company = db.companies.find_one({"id": int(company_id)}) if company_id else None
     if not jd_text and company:
-        jd_text = company.jd_text or f"Recruitment for {company.name}"
+        jd_text = company.get("jd_text") or f"Recruitment for {company.get('name')}"
         
-    query = Student.query
+    filters = {}
     if dept_code != "ALL":
-        query = query.join(Student.department).filter(Student.department.has(code=dept_code))
+        filters["department_code"] = dept_code
         
-    students = query.limit(limit).all()
+    students_cursor = db.students.find(filters).limit(limit)
     results = []
     high_matches = []
     
-    for s in students:
-        s_dict = s.to_dict()
-        res = analyze_resume_ats(s_dict, jd_text, company.name if company else "Campus Drive")
+    for s in students_cursor:
+        s_dict = dict(s)
+        res = analyze_resume_ats(s_dict, jd_text, company.get("name") if company else "Campus Drive")
+        next_id = get_next_sequence("ats_id")
         
-        ats_rec = ATSAnalysis(
-            student_id=s.id,
-            company_id=company_id,
-            ats_score=res["ats_score"],
-            category=res["category"],
-            matched_skills=",".join(res["matched_skills"]),
-            missing_skills=",".join(res["missing_skills"]),
-            summary=res["summary"],
-            analyzed_by_id=user.id
+        ats_doc = {
+            "id": next_id,
+            "student_id": s.get("id"),
+            "student_roll_no": s.get("roll_no"),
+            "student_name": s.get("name"),
+            "department_code": s.get("department_code"),
+            "company_id": int(company_id) if company_id else None,
+            "company_name": company.get("name") if company else "Campus Drive",
+            "ats_score": res["ats_score"],
+            "category": res["category"],
+            "matched_skills": ",".join(res["matched_skills"]),
+            "missing_skills": ",".join(res["missing_skills"]),
+            "summary": res["summary"],
+            "analyzed_by_id": user.id,
+            "created_at": datetime.utcnow()
+        }
+        
+        db.ats_analyses.update_one(
+            {"student_id": s.get("id"), "company_id": int(company_id) if company_id else None},
+            {"$set": ats_doc},
+            upsert=True
         )
-        db.session.add(ats_rec)
         
-        item = ats_rec.to_dict()
-        results.append(item)
+        results.append(ats_to_dict(ats_doc))
         if res["is_high_match"]:
             high_matches.append({
-                "roll_no": s.roll_no,
-                "name": s.name,
-                "department": s.department.code if s.department else "",
+                "roll_no": s.get("roll_no"),
+                "name": s.get("name"),
+                "department": s.get("department_code", ""),
                 "score": res["ats_score"]
             })
             
-    db.session.commit()
     log_activity(user.id, "BATCH_ATS_SCAN", "ATSAnalysis", len(results), f"Completed batch ATS evaluation for {len(results)} students")
     
     return jsonify({
         "total_analyzed": len(results),
         "high_matches_count": len(high_matches),
-        "high_matches_list": high_matches, # For special popup listing!
+        "high_matches_list": high_matches,
         "results": results
     })
 
@@ -253,11 +280,13 @@ def get_ats_results():
     category = request.args.get("category", "").strip()
     company_id = request.args.get("company_id", type=int)
     
-    query = ATSAnalysis.query
+    db = get_db()
+    filters = {}
     if category and category != "ALL":
-        query = query.filter(ATSAnalysis.category == category)
+        filters["category"] = category
     if company_id:
-        query = query.filter(ATSAnalysis.company_id == company_id)
+        filters["company_id"] = company_id
         
-    records = query.order_by(ATSAnalysis.ats_score.desc()).limit(100).all()
-    return jsonify([r.to_dict() for r in records])
+    records_cursor = db.ats_analyses.find(filters).sort("ats_score", -1).limit(100)
+    records = [ats_to_dict(r) for r in records_cursor]
+    return jsonify(records)
