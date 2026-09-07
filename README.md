@@ -1,4 +1,4 @@
-# ?? Campus Placement Management System (PlacementOS)
+# Campus Placement Management System (PlacementOS)
 
 A comprehensive, enterprise-grade **Training and Placement Cell Management Portal** built with **Flask, Python, SQLAlchemy, Tailwind CSS, and Google Gemini AI**. 
 
@@ -6,7 +6,7 @@ Designed for higher-education institutions to manage 3,000+ candidate databases,
 
 ---
 
-## ?? Key Features & Modules
+##  Key Features & Modules
 
 ### 1. ?? Role-Gated Access Control
 * **Admin (Placement Head - Dr. Sivasubramaniyan Sir)**: 
@@ -21,7 +21,7 @@ Designed for higher-education institutions to manage 3,000+ candidate databases,
 
 ---
 
-### 2. ?? Gemini AI ATS Resume Matcher
+### 2.  Gemini AI ATS Resume Matcher
 * **Direct File Upload**: Upload resume files directly (.pdf, .docx, .txt) or select from the student database.
 * **Autonomous Match Scoring**:
   * **91–100%**: Top Tier Candidate (Auto-alert badge)
@@ -33,13 +33,13 @@ Designed for higher-education institutions to manage 3,000+ candidate databases,
 
 ---
 
-### 3. ?? Job Description Word Document (.docx) Generator
+### 3.  Job Description Word Document (.docx) Generator
 * 1-click download of formatted **Microsoft Word documents (.docx)** for any company job description.
 * Built using python-docx with custom institutional letterheads, corporate tables, eligibility criteria, CTC packages, and selection rounds.
 
 ---
 
-### 4. ?? Company Proposal Sharing & Email Verification Center
+### 4.  Company Proposal Sharing & Email Verification Center
 * **Team Submission**: Team Leads & Members fill in company details, CTC package, HR contact, proposed drive date, and notes.
 * **Automated Admin Notification**: Dispatches a formatted HTML email alert to the Admin mailbox (sivasubramaniyan@college.edu).
 * **Admin Verification Field**:
@@ -49,7 +49,7 @@ Designed for higher-education institutions to manage 3,000+ candidate databases,
 
 ---
 
-### 5. ?? Real-Time Analytics & Report Generation
+### 5.  Real-Time Analytics & Report Generation
 * **Live Dashboards**: Placement percentage tracking, highest/average CTC metrics, and departmental placement charts (Chart.js).
 * **Multi-Format Exports**:
   * **Excel Spreadsheets**: Formatted .xlsx exports via openpyxl.
@@ -57,7 +57,7 @@ Designed for higher-education institutions to manage 3,000+ candidate databases,
 
 ---
 
-## ?? Default Credentials Reference
+##  Default Credentials Reference
 
 | Role | Username / Member ID | Password | Access Rights |
 | :--- | :--- | :--- | :--- |
@@ -69,7 +69,7 @@ Designed for higher-education institutions to manage 3,000+ candidate databases,
 
 ---
 
-## ?? Tech Stack
+##  Tech Stack
 
 * **Backend**: Python 3.12, Flask, Flask-SQLAlchemy, Werkzeug, Gunicorn
 * **AI Engine**: Google Gemini AI API (google-genai)
@@ -80,7 +80,7 @@ Designed for higher-education institutions to manage 3,000+ candidate databases,
 
 ---
 
-## ?? Local Setup & Installation
+##  Local Setup & Installation
 
 ### 1. Clone the Repository
 `ash
@@ -112,12 +112,12 @@ Open **[http://127.0.0.1:5000](http://127.0.0.1:5000)** in your browser.
 
 ---
 
-## ?? Deployment on Vercel
+##  Deployment on Vercel
 
 This repository is pre-configured for **Vercel Serverless Deployment**:
 
 1. Import the repository into your Vercel account:
-   * **[https://vercel.com/new](https://vercel.com/new)**
+   * **https://placement-s-ite-96bk.vercel.app/login**
 2. Select **Nandhakishore-A/Placement_SIte**.
 3. (Optional) Set Environment Variables:
    * SECRET_KEY: super-secret-placement-key-2026
@@ -126,5 +126,5 @@ This repository is pre-configured for **Vercel Serverless Deployment**:
 
 ---
 
-## ?? License
+##  License
 This project is licensed under the MIT License.
