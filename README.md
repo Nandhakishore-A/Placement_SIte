@@ -8,7 +8,7 @@ Designed for higher-education institutions to manage 3,000+ candidate databases,
 
 ##  Key Features & Modules
 
-### 1. ?? Role-Gated Access Control
+### 1.  Role-Gated Access Control
 * **Admin (Placement Head - Dr. Sivasubramaniyan Sir)**: 
   * Full unrestricted access to all 7 modules.
   * Dedicated **Email Verification Field** for team proposals.
